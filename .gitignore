@@ -1,0 +1,20 @@
+# Godot 4
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+
+# Mono / C# nếu không dùng thì vẫn để cũng không sao
+.mono/
+data_*/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# Log / temp
+*.log
+*.tmp

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cmrp2y8128m0h"
+path="res://.godot/imported/Lever -sound.mp3-ef9f1a921804cb7dd5f7b664bda36679.mp3str"
+
+[deps]
+
+source_file="res://Things/Lever/Lever -sound.mp3"
+dest_files=["res://.godot/imported/Lever -sound.mp3-ef9f1a921804cb7dd5f7b664bda36679.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

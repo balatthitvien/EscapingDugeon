@@ -1,0 +1,73 @@
+[gd_scene format=3 uid="uid://n0cw3a3xotyt"]
+
+[ext_resource type="Texture2D" uid="uid://dysda6jmpda4x" path="res://Things/WoodDoor/wood door.png" id="1_dljqo"]
+[ext_resource type="Script" uid="uid://buvcytk7f4lnb" path="res://Things/WoodDoor/WoodDoor.gd" id="1_ivt1i"]
+[ext_resource type="AudioStream" uid="uid://cy6a7ru4runxl" path="res://Things/WoodDoor/WoodDoor-open.mp3" id="2_u2gev"]
+[ext_resource type="Texture2D" uid="uid://jrwbmguppepa" path="res://NPC/NPC - BlackSmith/Sprites/npc- tam giac.png" id="3_u2gev"]
+
+[sub_resource type="Animation" id="Animation_ivt1i"]
+resource_name = "Open"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [0, 1, 2]
+}
+
+[sub_resource type="Animation" id="Animation_cj6g8"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_tydfp"]
+_data = {
+&"Open": SubResource("Animation_ivt1i"),
+&"RESET": SubResource("Animation_cj6g8")
+}
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dljqo"]
+size = Vector2(38, 38)
+
+[node name="WoodDoor" type="Node2D" unique_id=1122919097]
+script = ExtResource("1_ivt1i")
+door_id = "wood_door_map_3"
+target_spawn_point_name = "FromMap6"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=562916904]
+texture = ExtResource("1_dljqo")
+hframes = 3
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=660154453]
+libraries/ = SubResource("AnimationLibrary_tydfp")
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=828141939]
+stream = ExtResource("2_u2gev")
+
+[node name="InteractionArea" type="Area2D" parent="." unique_id=1961023915]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=561025229]
+position = Vector2(0, 1)
+shape = SubResource("RectangleShape2D_dljqo")
+
+[node name="TalkIndicator" type="Sprite2D" parent="." unique_id=1166273707]
+position = Vector2(-1, -38)
+texture = ExtResource("3_u2gev")

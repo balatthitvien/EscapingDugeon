@@ -1,0 +1,202 @@
+extends Area2D
+
+@onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var talk_indicator: Sprite2D = $TalkIndicator
+
+@export var required_flag: String = "map_2_skeleton_killed"
+@export var locked_message: String = "Bạn chưa thể đến khu vực này"
+
+@export_file("*.tscn") var target_scene_path: String
+@export var target_spawn_point_name: String = ""
+
+@export var fade_out_time: float = 0.7
+@export var fade_in_time: float = 0.7
+
+var player_in_range: bool = false
+var player: Player = null
+var is_changing_scene: bool = false
+
+var message_layer: CanvasLayer
+var message_label: Label
+var message_tween: Tween = null
+
+
+func _ready() -> void:
+	monitoring = true
+	monitorable = true
+
+	if collision_shape != null:
+		collision_shape.disabled = false
+
+	if talk_indicator != null:
+		talk_indicator.visible = false
+		talk_indicator.z_index = 100
+		talk_indicator.z_as_relative = false
+
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
+
+	if not body_exited.is_connected(_on_body_exited):
+		body_exited.connect(_on_body_exited)
+
+	if not area_entered.is_connected(_on_area_entered):
+		area_entered.connect(_on_area_entered)
+
+	if not area_exited.is_connected(_on_area_exited):
+		area_exited.connect(_on_area_exited)
+
+	create_message_ui()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not player_in_range:
+		return
+
+	if is_changing_scene:
+		return
+
+	if event.is_action_pressed("interact"):
+		try_use_door()
+		get_viewport().set_input_as_handled()
+
+
+func try_use_door() -> void:
+	if not LevelManager.get_game_flag(required_flag):
+		show_bottom_message(locked_message)
+		return
+
+	if target_scene_path == "":
+		show_bottom_message("Cửa đã mở, nhưng chưa gán map đích.")
+		return
+
+	is_changing_scene = true
+
+	if target_spawn_point_name != "":
+		LevelManager.set_next_spawn_point(target_spawn_point_name)
+
+	await SceneTransition.change_scene_with_fade(
+		target_scene_path,
+		fade_out_time,
+		fade_in_time
+	)
+
+
+func _on_body_entered(body: Node2D) -> void:
+	try_set_player_in_range(body)
+
+
+func _on_body_exited(body: Node2D) -> void:
+	try_remove_player_from_range(body)
+
+
+func _on_area_entered(area: Area2D) -> void:
+	try_set_player_in_range(area)
+
+	if area.get_parent() != null:
+		try_set_player_in_range(area.get_parent())
+
+
+func _on_area_exited(area: Area2D) -> void:
+	try_remove_player_from_range(area)
+
+	if area.get_parent() != null:
+		try_remove_player_from_range(area.get_parent())
+
+
+func try_set_player_in_range(target: Node) -> void:
+	var detected_player: Player = find_player_from_node(target)
+
+	if detected_player == null:
+		return
+
+	player = detected_player
+	player_in_range = true
+
+	if talk_indicator != null:
+		talk_indicator.visible = true
+
+	print("Player đã vào vùng cửa")
+
+
+func try_remove_player_from_range(target: Node) -> void:
+	var detected_player: Player = find_player_from_node(target)
+
+	if detected_player == null:
+		return
+
+	if detected_player != player:
+		return
+
+	player = null
+	player_in_range = false
+
+	if talk_indicator != null:
+		talk_indicator.visible = false
+
+	print("Player đã rời vùng cửa")
+
+
+func create_message_ui() -> void:
+	message_layer = CanvasLayer.new()
+	message_layer.layer = 1000
+	add_child(message_layer)
+
+	message_label = Label.new()
+	message_layer.add_child(message_label)
+
+	message_label.visible = false
+	message_label.text = ""
+	message_label.modulate.a = 0.0
+
+	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	message_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	message_label.offset_left = -350
+	message_label.offset_right = 350
+	message_label.offset_top = -110
+	message_label.offset_bottom = -60
+
+	message_label.add_theme_font_size_override("font_size", 24)
+
+
+func show_bottom_message(text: String) -> void:
+	if message_label == null:
+		return
+
+	if message_tween != null:
+		message_tween.kill()
+
+	message_label.text = text
+	message_label.visible = true
+	message_label.modulate.a = 0.0
+
+	message_tween = create_tween()
+	message_tween.tween_property(message_label, "modulate:a", 1.0, 0.2)
+	message_tween.tween_interval(1.8)
+	message_tween.tween_property(message_label, "modulate:a", 0.0, 0.3)
+
+	await message_tween.finished
+
+	message_label.visible = false
+
+
+func find_player_from_node(node: Node) -> Player:
+	var current := node
+
+	while current != null:
+		if current is Player:
+			return current as Player
+
+		if current.is_in_group("player"):
+			return current as Player
+
+		if current.is_in_group("Player"):
+			return current as Player
+
+		if current.name == "Player":
+			return current as Player
+
+		current = current.get_parent()
+
+	return null

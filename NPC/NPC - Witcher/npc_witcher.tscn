@@ -1,0 +1,120 @@
+[gd_scene format=3 uid="uid://7tsbryshejcy"]
+
+[ext_resource type="Script" uid="uid://dsqgap7tpdsp8" path="res://NPC/NPC - Witcher/Scripts/npc_witcher.gd" id="1_6thxb"]
+[ext_resource type="Texture2D" uid="uid://dhlhuwxdbuism" path="res://NPC/NPC - Witcher/Sprites/NPC - witcher.png" id="1_e3nbr"]
+[ext_resource type="Texture2D" uid="uid://jrwbmguppepa" path="res://NPC/NPC - BlackSmith/Sprites/npc- tam giac.png" id="2_6thxb"]
+[ext_resource type="Texture2D" uid="uid://c4amol8fiahsq" path="res://Player/Sprite/avatar1.png" id="2_lp7yi"]
+[ext_resource type="Texture2D" uid="uid://daubyeg4eqfh6" path="res://NPC/NPC - Witcher/Sprites/avatar - npc4.png" id="3_giyg5"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e3nbr"]
+height = 36.0
+
+[sub_resource type="Animation" id="Animation_r710j"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_lp7yi"]
+resource_name = "chill_left"
+length = 1.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [19, 20, 21, 22, 23, 24, 25]
+}
+
+[sub_resource type="Animation" id="Animation_giyg5"]
+resource_name = "idle_right"
+length = 1.1
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [6, 7, 59, 9, 10, 11]
+}
+
+[sub_resource type="Animation" id="Animation_e3nbr"]
+resource_name = "work_left"
+length = 3.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_mp28t"]
+_data = {
+&"RESET": SubResource("Animation_r710j"),
+&"chill_left": SubResource("Animation_lp7yi"),
+&"idle_left": SubResource("Animation_giyg5"),
+&"work_left": SubResource("Animation_e3nbr")
+}
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_kdpkd"]
+radius = 13.0
+height = 34.0
+
+[node name="NPC - Witcher" type="CharacterBody2D" unique_id=131524738]
+position = Vector2(3, -23)
+collision_layer = 0
+script = ExtResource("1_6thxb")
+player_portrait = ExtResource("2_lp7yi")
+npc_portrait = ExtResource("3_giyg5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=443365380]
+light_mask = 128
+position = Vector2(-3, 6)
+shape = SubResource("CapsuleShape2D_e3nbr")
+debug_color = Color(0, 0.6514058, 0.03556612, 0.41960785)
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=91034591]
+texture = ExtResource("1_e3nbr")
+hframes = 60
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1875942955]
+libraries/ = SubResource("AnimationLibrary_mp28t")
+
+[node name="TalkArea" type="Area2D" parent="." unique_id=633505021]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TalkArea" unique_id=500939062]
+position = Vector2(1, 9)
+shape = SubResource("CapsuleShape2D_kdpkd")
+
+[node name="TalkIndicator" type="Sprite2D" parent="." unique_id=878327838]
+position = Vector2(0, -21)
+texture = ExtResource("2_6thxb")

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bbkc3r1h5nj73"
+path="res://.godot/imported/Abandoned Ruins _ D&D_TTRPG Music _ 1 Hour [205meIww0zg].mp3-7911a159e44de5b16c9be7902a7c1340.mp3str"
+
+[deps]
+
+source_file="res://00_Globals/Music/Abandoned Ruins _ D&D_TTRPG Music _ 1 Hour [205meIww0zg].mp3"
+dest_files=["res://.godot/imported/Abandoned Ruins _ D&D_TTRPG Music _ 1 Hour [205meIww0zg].mp3-7911a159e44de5b16c9be7902a7c1340.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

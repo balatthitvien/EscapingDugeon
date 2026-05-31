@@ -1,0 +1,84 @@
+[gd_scene format=3 uid="uid://du8dewjo0dlq1"]
+
+[ext_resource type="Script" uid="uid://bqeijxahbncey" path="res://NPC/NPC - Shop/Scripts/NPC - Shop.gd" id="1_ju8ln"]
+[ext_resource type="Texture2D" uid="uid://ch36bf22s5yro" path="res://NPC/NPC - Shop/Sprites/NPC - Shop.png" id="1_qa3j7"]
+[ext_resource type="Texture2D" uid="uid://jrwbmguppepa" path="res://NPC/NPC - BlackSmith/Sprites/npc- tam giac.png" id="2_ju8ln"]
+[ext_resource type="Texture2D" uid="uid://c4amol8fiahsq" path="res://Player/Sprite/avatar1.png" id="2_u4wvc"]
+[ext_resource type="Texture2D" uid="uid://3gm64wx5dhgs" path="res://NPC/NPC - Shop/Sprites/avatar - npc3.png" id="3_e466x"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fsky5"]
+radius = 15.0
+height = 48.0
+
+[sub_resource type="Animation" id="Animation_u4wvc"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_e466x"]
+resource_name = "idle"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_bet6q"]
+_data = {
+&"RESET": SubResource("Animation_u4wvc"),
+&"idle": SubResource("Animation_e466x")
+}
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cyp38"]
+radius = 21.0
+height = 54.0
+
+[node name="NPC - Shop" type="CharacterBody2D" unique_id=345352623]
+script = ExtResource("1_ju8ln")
+player_portrait = ExtResource("2_u4wvc")
+npc_portrait = ExtResource("3_e466x")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1075606374]
+position = Vector2(6, -23)
+texture = ExtResource("1_qa3j7")
+hframes = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1418481390]
+position = Vector2(4, -24)
+shape = SubResource("CapsuleShape2D_fsky5")
+debug_color = Color(1.2513996e-06, 0.63719285, 0.39931747, 0.41960785)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1018167996]
+libraries/ = SubResource("AnimationLibrary_bet6q")
+
+[node name="TalkArea" type="Area2D" parent="." unique_id=177772802]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TalkArea" unique_id=92515944]
+position = Vector2(5, -24)
+shape = SubResource("CapsuleShape2D_cyp38")
+
+[node name="TalkIndicator" type="Sprite2D" parent="." unique_id=972172034]
+visible = false
+position = Vector2(2, -62)
+texture = ExtResource("2_ju8ln")

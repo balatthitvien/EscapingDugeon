@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://vvfmg7o501k2"]
+
+[ext_resource type="Script" uid="uid://ci5tdcfgp2ri2" path="res://00_Globals/MapExitArea.gd" id="1_diww2"]
+
+[node name="MapExitArea" type="Area2D" unique_id=22245689]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_diww2")
+target_scene_path = null
+target_spawn_point_name = null
+fade_out_time = null
+fade_in_time = null
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1567853298]

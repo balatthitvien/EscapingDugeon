@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dknpjmak53ase"
+path="res://.godot/imported/rat and bat-attack.mp3-e00040ca0eacf210e20ed16e22d2763f.mp3str"
+
+[deps]
+
+source_file="res://Monsters/Rat/Sounds/rat and bat-attack.mp3"
+dest_files=["res://.godot/imported/rat and bat-attack.mp3-e00040ca0eacf210e20ed16e22d2763f.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

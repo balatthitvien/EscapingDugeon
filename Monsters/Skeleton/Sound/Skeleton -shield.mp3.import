@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bpvibo4d002jh"
+path="res://.godot/imported/Skeleton -shield.mp3-8e3f261169456041a1f6f3eeba2eab96.mp3str"
+
+[deps]
+
+source_file="res://Monsters/Skeleton/Sound/Skeleton -shield.mp3"
+dest_files=["res://.godot/imported/Skeleton -shield.mp3-8e3f261169456041a1f6f3eeba2eab96.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

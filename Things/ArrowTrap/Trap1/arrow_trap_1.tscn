@@ -1,0 +1,122 @@
+[gd_scene format=3 uid="uid://b6rlvjgjbfbkc"]
+
+[ext_resource type="Texture2D" uid="uid://bphfeafeemjrt" path="res://Things/ArrowTrap/Trap1/Arrow Trap - Level 1.png" id="1_es3wg"]
+[ext_resource type="Script" uid="uid://mse8xiijrj8w" path="res://Things/ArrowTrap/Trap1/ArrowTrap1.gd" id="1_ktuot"]
+[ext_resource type="PackedScene" uid="uid://ch2dmtqitdfb0" path="res://Things/ArrowTrap/arrow.tscn" id="2_e517w"]
+[ext_resource type="AudioStream" uid="uid://cvurk8xlsowwk" path="res://Things/ArrowTrap/Arrowtrap - sound.mp3" id="4_o0ytb"]
+
+[sub_resource type="Animation" id="Animation_es3wg"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_o0ytb"]
+resource_name = "hide"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [11, 12, 13, 14, 15, 16]
+}
+
+[sub_resource type="Animation" id="Animation_ktuot"]
+resource_name = "rise"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5]
+}
+
+[sub_resource type="Animation" id="Animation_e517w"]
+resource_name = "shoot"
+length = 0.4
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [6, 7, 8, 9]
+}
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.2),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"shoot_arrow"
+}]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_o0ytb"]
+_data = {
+&"RESET": SubResource("Animation_es3wg"),
+&"hide": SubResource("Animation_o0ytb"),
+&"rise": SubResource("Animation_ktuot"),
+&"shoot": SubResource("Animation_e517w")
+}
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_e517w"]
+size = Vector2(426, 203)
+
+[node name="ArrowTrap1" type="Node2D" unique_id=1262315502]
+script = ExtResource("1_ktuot")
+arrow_projectile_scene = ExtResource("2_e517w")
+arrow_damage = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1462664795]
+texture = ExtResource("1_es3wg")
+hframes = 17
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=390608016]
+libraries/ = SubResource("AnimationLibrary_o0ytb")
+
+[node name="ShootPoint" type="Marker2D" parent="." unique_id=1829739686]
+position = Vector2(-8, 6)
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=100794551]
+stream = ExtResource("4_o0ytb")
+bus = &"SFX"
+
+[node name="VisionArea" type="Area2D" parent="." unique_id=261630142]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VisionArea" unique_id=1377742172]
+position = Vector2(-212, -69.5)
+shape = SubResource("RectangleShape2D_e517w")
+debug_color = Color(0.9901125, 0, 0.28795996, 0.41960785)

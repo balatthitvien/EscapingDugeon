@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://b8ub4fycda8ey"]
+
+[ext_resource type="Script" uid="uid://dpv2tygqpgabl" path="res://00_Globals/Music/music_manager.gd" id="1_1bpc5"]
+[ext_resource type="AudioStream" uid="uid://bbkc3r1h5nj73" path="res://00_Globals/Music/Abandoned Ruins _ D&D_TTRPG Music _ 1 Hour [205meIww0zg].mp3" id="1_6ao73"]
+[ext_resource type="AudioStream" uid="uid://fc6t5t3vobjq" path="res://level/testlevel/map_1/Troubadeck 53 A Screw Loose.ogg" id="2_q88h6"]
+[ext_resource type="AudioStream" uid="uid://cuhwop8lj602i" path="res://00_Globals/Music/MOST BADASS VOCAL BATTLE ACTION EVER  by Epikus.mp3" id="3_xmjkp"]
+
+[node name="MusicManager" type="Node2D" unique_id=131597068]
+script = ExtResource("1_1bpc5")
+map_1_music = ExtResource("2_q88h6")
+
+[node name="BGM" type="AudioStreamPlayer" parent="." unique_id=667608504]
+stream = ExtResource("1_6ao73")
+volume_db = -9.0
+bus = &"Music"
+
+[node name="BossMusic" type="AudioStreamPlayer" parent="." unique_id=1189171380]
+stream = ExtResource("3_xmjkp")
+volume_db = 0.302
+bus = &"Music"

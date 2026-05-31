@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://ch2dmtqitdfb0"]
+
+[ext_resource type="Script" uid="uid://o8lwgoh35yhg" path="res://Things/ArrowTrap/Arrow.gd" id="1_tcbh4"]
+[ext_resource type="Texture2D" uid="uid://fucb6sfdd32v" path="res://Things/ArrowTrap/Arrow.png" id="2_14f1t"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sotjc"]
+size = Vector2(28, 3.5)
+
+[node name="Arrow" type="Area2D" unique_id=1956166599]
+collision_layer = 16
+collision_mask = 3
+script = ExtResource("1_tcbh4")
+life_time = 1.5
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1586318712]
+texture = ExtResource("2_14f1t")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1806542956]
+position = Vector2(0, -0.25)
+shape = SubResource("RectangleShape2D_sotjc")
+
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="." unique_id=1089675925]

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://rmsljj1xn4ja"
+path="res://.godot/imported/Bat - Attack.mp3-3c04f0644191924b5ba63e79bc8f5b3b.mp3str"
+
+[deps]
+
+source_file="res://Monsters/Bat/Sounds/Bat - Attack.mp3"
+dest_files=["res://.godot/imported/Bat - Attack.mp3-3c04f0644191924b5ba63e79bc8f5b3b.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

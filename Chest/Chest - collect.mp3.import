@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cmn60v52yq577"
+path="res://.godot/imported/Chest - collect.mp3-326eaa80d9c4be8e72fcb02740874626.mp3str"
+
+[deps]
+
+source_file="res://Chest/Chest - collect.mp3"
+dest_files=["res://.godot/imported/Chest - collect.mp3-326eaa80d9c4be8e72fcb02740874626.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

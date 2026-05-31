@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cuhwop8lj602i"
+path="res://.godot/imported/MOST BADASS VOCAL BATTLE ACTION EVER  by Epikus.mp3-2af98d692ff3c565df76093cf5c897d5.mp3str"
+
+[deps]
+
+source_file="res://00_Globals/Music/MOST BADASS VOCAL BATTLE ACTION EVER  by Epikus.mp3"
+dest_files=["res://.godot/imported/MOST BADASS VOCAL BATTLE ACTION EVER  by Epikus.mp3-2af98d692ff3c565df76093cf5c897d5.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,101 @@
+[gd_scene format=3 uid="uid://djxixpmv0a62b"]
+
+[ext_resource type="Script" uid="uid://dcsc475fae8r8" path="res://NPC/NPC - Mission/Scripts/npc_mission.gd" id="1_0ffst"]
+[ext_resource type="Texture2D" uid="uid://dplaemhgmocv3" path="res://NPC/NPC - Mission/Sprites/NPC_1.png" id="1_tc7qq"]
+[ext_resource type="Texture2D" uid="uid://c4amol8fiahsq" path="res://Player/Sprite/avatar1.png" id="2_k8xd5"]
+[ext_resource type="Texture2D" uid="uid://wvies641ysf3" path="res://NPC/NPC - Mission/Sprites/avatar - npcmission.png" id="3_5decb"]
+[ext_resource type="Texture2D" uid="uid://ct61ukeo7j3t6" path="res://NPC/NPC - Mission/Sprites/npc- tam giac.png" id="4_hn3ya"]
+
+[sub_resource type="Animation" id="Animation_tc7qq"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_yc64i"]
+resource_name = "idle_left"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [4, 5, 6, 7]
+}
+
+[sub_resource type="Animation" id="Animation_0ffst"]
+resource_name = "idle_right"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_yc64i"]
+_data = {
+&"RESET": SubResource("Animation_tc7qq"),
+&"idle_left": SubResource("Animation_yc64i"),
+&"idle_right": SubResource("Animation_0ffst")
+}
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_rqg5b"]
+height = 36.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_7yrsp"]
+radius = 15.0
+height = 36.0
+
+[node name="NPC-Mission" type="CharacterBody2D" unique_id=414799376]
+collision_layer = 128
+script = ExtResource("1_0ffst")
+player_portrait = ExtResource("2_k8xd5")
+npc_portrait = ExtResource("3_5decb")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1342896621]
+position = Vector2(0, -21)
+texture = ExtResource("1_tc7qq")
+hframes = 8
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=714817070]
+libraries/ = SubResource("AnimationLibrary_yc64i")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=949942000]
+position = Vector2(0, -18)
+shape = SubResource("CapsuleShape2D_rqg5b")
+
+[node name="TalkArea" type="Area2D" parent="." unique_id=1398739360]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TalkArea" unique_id=465187468]
+position = Vector2(-1, -18)
+shape = SubResource("CapsuleShape2D_7yrsp")
+debug_color = Color(3.7301331e-06, 0.6469361, 0.2323677, 0.41960785)
+
+[node name="TalkIndicator" type="Sprite2D" parent="." unique_id=66028225]
+position = Vector2(-2, -47)
+texture = ExtResource("4_hn3ya")

@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://be5iph5libhbw"]
+
+[ext_resource type="Script" uid="uid://cy57kvjbxohgr" path="res://CampFire/Scripts/CampFire.gd" id="1_dpkks"]
+[ext_resource type="Texture2D" uid="uid://beuyoohk8g0ap" path="res://CampFire/Sprites/Fire.png" id="1_v36ey"]
+[ext_resource type="Texture2D" uid="uid://jrwbmguppepa" path="res://NPC/NPC - BlackSmith/Sprites/npc- tam giac.png" id="3_eew1r"]
+
+[sub_resource type="Animation" id="Animation_dpkks"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_eew1r"]
+resource_name = "campfire"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.033333335, 0.2, 0.4, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_f64w2"]
+_data = {
+&"RESET": SubResource("Animation_dpkks"),
+&"campfire": SubResource("Animation_eew1r")
+}
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_f64w2"]
+size = Vector2(33, 30)
+
+[node name="CampFire" type="CharacterBody2D" unique_id=937363598]
+script = ExtResource("1_dpkks")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2109949657]
+texture = ExtResource("1_v36ey")
+hframes = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=70546357]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=566356931]
+libraries/ = SubResource("AnimationLibrary_f64w2")
+
+[node name="InteractionArea" type="Area2D" parent="." unique_id=1452961509]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=831751366]
+position = Vector2(1.5, 1)
+shape = SubResource("RectangleShape2D_f64w2")
+
+[node name="TalkIndicator" type="Sprite2D" parent="." unique_id=139381031]
+position = Vector2(-1, -21)
+texture = ExtResource("3_eew1r")

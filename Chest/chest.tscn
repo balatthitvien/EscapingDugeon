@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://2e4mackmj7wy"]
+
+[ext_resource type="Script" uid="uid://rh7kxe5s3eh" path="res://Chest/chest.gd" id="1_urnrk"]
+[ext_resource type="Texture2D" uid="uid://c84am6juhh35a" path="res://Chest/Chest.png" id="1_vbo4i"]
+[ext_resource type="Texture2D" uid="uid://jrwbmguppepa" path="res://NPC/NPC - BlackSmith/Sprites/npc- tam giac.png" id="2_urnrk"]
+[ext_resource type="AudioStream" uid="uid://cy7hiwwrdr4mc" path="res://Chest/Chest - open.mp3" id="3_gj4rf"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gj4rf"]
+size = Vector2(30, 21)
+
+[sub_resource type="Animation" id="Animation_vbo4i"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_urnrk"]
+resource_name = "closed"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_gj4rf"]
+resource_name = "open"
+length = 0.8
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.5, 0.6, 0.7),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4]
+}
+
+[sub_resource type="Animation" id="Animation_07ty7"]
+resource_name = "opened"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [5]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_h07ny"]
+_data = {
+&"RESET": SubResource("Animation_vbo4i"),
+&"closed": SubResource("Animation_urnrk"),
+&"open": SubResource("Animation_gj4rf"),
+&"opened": SubResource("Animation_07ty7")
+}
+
+[node name="Chest" type="Area2D" unique_id=928115993]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_urnrk")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=45990610]
+texture = ExtResource("1_vbo4i")
+hframes = 6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=249836141]
+position = Vector2(0, 5.5)
+shape = SubResource("RectangleShape2D_gj4rf")
+
+[node name="OpenSound" type="AudioStreamPlayer2D" parent="." unique_id=2000275894]
+stream = ExtResource("3_gj4rf")
+volume_db = 5.0
+bus = &"SFX"
+
+[node name="TalkIndicator" type="Sprite2D" parent="." unique_id=1705521158]
+position = Vector2(0, -21)
+texture = ExtResource("2_urnrk")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1091244294]
+libraries/ = SubResource("AnimationLibrary_h07ny")

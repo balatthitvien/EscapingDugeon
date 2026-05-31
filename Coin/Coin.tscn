@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://cfyjp00ko2iji"]
+
+[ext_resource type="Texture2D" uid="uid://bp7upsae8ssu5" path="res://Coin/Coin.png" id="1_tr2r7"]
+[ext_resource type="Script" uid="uid://beg03s743qyan" path="res://Coin/Coin.gd" id="1_xttat"]
+[ext_resource type="AudioStream" uid="uid://bit7cc81vk68g" path="res://Coin/Coin (mp3cut.net).mp3" id="3_xttat"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_2edmv"]
+radius = 3.0
+height = 10.0
+
+[sub_resource type="Animation" id="Animation_cvmjc"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_n1utt"]
+resource_name = "idle"
+length = 0.6
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_hncjg"]
+_data = {
+&"RESET": SubResource("Animation_cvmjc"),
+&"idle": SubResource("Animation_n1utt")
+}
+
+[node name="Coin" type="Area2D" unique_id=182171707]
+collision_layer = 128
+collision_mask = 2
+script = ExtResource("1_xttat")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=25598236]
+texture = ExtResource("1_tr2r7")
+hframes = 6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1445053960]
+shape = SubResource("CapsuleShape2D_2edmv")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=221531870]
+libraries/ = SubResource("AnimationLibrary_hncjg")
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1013763978]
+stream = ExtResource("3_xttat")
+bus = &"SFX"

@@ -1,0 +1,73 @@
+[gd_scene format=3 uid="uid://e3w3fa5wi0c2"]
+
+[ext_resource type="Script" uid="uid://b14wljaw4o8x6" path="res://Lava/lava.gd" id="1_pl5wq"]
+[ext_resource type="Texture2D" uid="uid://ci2v6ehxrxlm2" path="res://Lava/Lava.png" id="2_aw58c"]
+[ext_resource type="AudioStream" uid="uid://cc057aqj4v2dv" path="res://Lava/lava.mp3" id="3_6dwgg"]
+[ext_resource type="AudioStream" uid="uid://c443ni02ii46r" path="res://Lava/lava - death.mp3" id="4_aw58c"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cr8s5"]
+size = Vector2(16, 17)
+
+[sub_resource type="Animation" id="Animation_t81gq"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_sad4d"]
+resource_name = "idle"
+length = 0.5
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_8xscc"]
+_data = {
+&"RESET": SubResource("Animation_t81gq"),
+&"idle": SubResource("Animation_sad4d")
+}
+
+[node name="Lava" type="Area2D" unique_id=356959140]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_pl5wq")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2033277347]
+position = Vector2(0, -8)
+texture = ExtResource("2_aw58c")
+hframes = 5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2134212592]
+position = Vector2(0, -8.5)
+shape = SubResource("RectangleShape2D_cr8s5")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1555205803]
+libraries/ = SubResource("AnimationLibrary_8xscc")
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=951026292]
+stream = ExtResource("3_6dwgg")
+volume_db = 20.0
+bus = &"SFX"
+
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="." unique_id=1807025935]
+stream = ExtResource("4_aw58c")
+volume_db = 3.0

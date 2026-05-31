@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://c5rb45mhl22ae"]
+
+[ext_resource type="Script" uid="uid://2p208pit77s4" path="res://NPC/NPC - BlackSmith/Scripts/BlacksmithUpgradeUI.gd" id="1_sbvlr"]
+[ext_resource type="Texture2D" uid="uid://da570eqt8emdt" path="res://NPC/NPC - BlackSmith/Sprites/swordpicture.png" id="2_ho8jk"]
+
+[node name="BlacksmithUpgradeUI" type="CanvasLayer" unique_id=747440581]
+script = ExtResource("1_sbvlr")
+weapon_texture = ExtResource("2_ho8jk")

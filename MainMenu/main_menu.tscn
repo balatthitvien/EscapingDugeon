@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://cbbyil75re85b"]
+
+[ext_resource type="Script" uid="uid://hej2eptqce8a" path="res://MainMenu/Scripts/main_menu.gd" id="1_nhkf3"]
+[ext_resource type="FontFile" uid="uid://cw8gb6uqik71j" path="res://MainMenu/RasterForgeRegular-JpBgm.ttf" id="2_3w4mj"]
+[ext_resource type="AudioStream" uid="uid://bpgces8h1bys" path="res://00_Globals/Music/click_double_off.wav" id="3_5de1l"]
+
+[node name="MainMenu" type="Control" unique_id=2032066903]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_nhkf3")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1172147654]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1979377525]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -23.5
+offset_right = 20.0
+offset_bottom = 23.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer" unique_id=862952035]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_3w4mj")
+text = "ESCAPING DUGEON"
+horizontal_alignment = 1
+
+[node name="PlayButton" type="Button" parent="VBoxContainer" unique_id=1435026273]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_3w4mj")
+text = "PLAY"
+
+[node name="LoadButton" type="Button" parent="VBoxContainer" unique_id=477392143]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_3w4mj")
+text = "LOAD"
+
+[node name="QuitButton" type="Button" parent="VBoxContainer" unique_id=1996248973]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_3w4mj")
+text = "QUIT"
+
+[node name="MenuClickSound" type="AudioStreamPlayer" parent="." unique_id=1921163131]
+stream = ExtResource("3_5de1l")
+pitch_scale = 0.22

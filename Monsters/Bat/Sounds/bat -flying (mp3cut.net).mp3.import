@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://d2ah3b4812xdk"
+path="res://.godot/imported/bat -flying (mp3cut.net).mp3-8860436547a87ac78bb516bde75da4b2.mp3str"
+
+[deps]
+
+source_file="res://Monsters/Bat/Sounds/bat -flying (mp3cut.net).mp3"
+dest_files=["res://.godot/imported/bat -flying (mp3cut.net).mp3-8860436547a87ac78bb516bde75da4b2.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

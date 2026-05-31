@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://ddrqh68gdqck7"]
+
+[ext_resource type="Script" uid="uid://cej3p3fpciu3w" path="res://Player/HUD/PlayerHUD.gd" id="1_5w10p"]
+[ext_resource type="PackedScene" uid="uid://kj7d6epneag1" path="res://Heart/heart.tscn" id="2_hofmm"]
+[ext_resource type="Texture2D" uid="uid://djqrbkn7f04i5" path="res://Coin/coin-icon.png" id="2_lplkf"]
+[ext_resource type="FontFile" uid="uid://cw8gb6uqik71j" path="res://MainMenu/RasterForgeRegular-JpBgm.ttf" id="3_hofmm"]
+[ext_resource type="Texture2D" uid="uid://d1rgserlhyaog" path="res://Player/HUD/exp bar 1.png" id="4_71aj4"]
+[ext_resource type="Texture2D" uid="uid://duf4dsrv3ed3y" path="res://Things/Potion - heal/Potion-heal.png" id="5_5ps51"]
+
+[node name="PlayerHUD" type="CanvasLayer" unique_id=1490889111]
+script = ExtResource("1_5w10p")
+heart_scene = ExtResource("2_hofmm")
+hearts_start_position = null
+heart_spacing = null
+coin_icon_position = null
+coin_label_position = null
+exp_bar_position = null
+exp_bar_frame_count = null
+
+[node name="HeartRow" type="Node2D" parent="." unique_id=209614438]
+position = Vector2(23, 16)
+
+[node name="CoinCountLabel" type="Label" parent="." unique_id=640303140]
+offset_left = 52.0
+offset_top = 64.0
+offset_right = 92.0
+offset_bottom = 87.0
+theme_override_fonts/font = ExtResource("3_hofmm")
+
+[node name="CoinIcon" type="Sprite2D" parent="." unique_id=1458924235]
+position = Vector2(28, 54)
+texture = ExtResource("2_lplkf")
+
+[node name="PotionIcon" type="Sprite2D" parent="." unique_id=1779468072]
+position = Vector2(27, 74)
+texture = ExtResource("5_5ps51")
+
+[node name="ExpBar" type="Node2D" parent="." unique_id=372617504]
+position = Vector2(124, 19)
+
+[node name="Sprite2D" type="Sprite2D" parent="ExpBar" unique_id=152552095]
+texture = ExtResource("4_71aj4")
+hframes = 7
+
+[node name="LevelLabel" type="Label" parent="ExpBar" unique_id=1402958722]
+offset_left = 84.0
+offset_top = -8.0
+offset_right = 124.0
+offset_bottom = 15.0
+theme_override_fonts/font = ExtResource("3_hofmm")
+theme_override_font_sizes/font_size = 11
+
+[node name="PotionCountLabel" type="Label" parent="." unique_id=494495238]
+offset_left = 39.0
+offset_top = 63.0
+offset_right = 79.0
+offset_bottom = 86.0
+theme_override_fonts/font = ExtResource("3_hofmm")
+
+[node name="PotionHintLabel" type="Label" parent="." unique_id=36854711]
+visible = false
+offset_left = 130.0
+offset_top = 130.0
+offset_right = 348.0
+offset_bottom = 153.0
+text = "Bấm R để sử dụng bình máu"

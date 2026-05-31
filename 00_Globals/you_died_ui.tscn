@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://b6tdirwapb4pl"]
+
+[ext_resource type="Script" uid="uid://brovid58n6l4p" path="res://00_Globals/you_died_label.gd" id="1_gito6"]
+
+[node name="YouDiedUI" type="CanvasLayer" unique_id=1526660008]
+script = ExtResource("1_gito6")
+
+[node name="DarkBackground" type="ColorRect" parent="." unique_id=1131191781]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="YouDiedLabel" type="Label" parent="." unique_id=1506823129]
+offset_right = 40.0
+offset_bottom = 23.0
