@@ -7,7 +7,7 @@ extends Control
 @onready var load_button: Button = $VBoxContainer/LoadButton
 @onready var quit_button: Button = $VBoxContainer/QuitButton
 @onready var menu_click_sound: AudioStreamPlayer = $MenuClickSound
-
+@onready var coop_button: Button = $VBoxContainer/CoopButton
 var load_panel: Panel
 var load_message_label: Label
 var load_slot_rows: Array = []
@@ -21,6 +21,7 @@ func _ready() -> void:
 	create_load_ui()
 
 	play_button.pressed.connect(_on_play_pressed)
+	coop_button.pressed.connect(_on_coop_pressed)
 	load_button.pressed.connect(_on_load_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 
@@ -56,7 +57,8 @@ func setup_layout() -> void:
 	title_label.add_theme_constant_override("outline_size", 3)
 	title_label.custom_minimum_size = Vector2(600, 70)
 
-	setup_button(play_button, "PLAY")
+	setup_button(play_button, "1 PLAYER")
+	setup_button(coop_button, "2 PLAYER")
 	setup_button(load_button, "LOAD")
 	setup_button(quit_button, "QUIT")
 
@@ -253,7 +255,7 @@ func _on_play_pressed() -> void:
 	play_button.disabled = true
 	load_button.disabled = true
 	quit_button.disabled = true
-
+	GameMode.set_single_player()
 	if SaveManager != null:
 		SaveManager.clear_pending_load()
 	PlayerManager.reset_runtime_stats()
@@ -279,7 +281,27 @@ func _on_load_pressed() -> void:
 	center_load_panel()
 	refresh_load_slots()
 
+func _on_coop_pressed() -> void:
+	play_button.disabled = true
+	coop_button.disabled = true
+	load_button.disabled = true
+	quit_button.disabled = true
 
+	GameMode.set_two_players()
+
+	if SaveManager != null:
+		SaveManager.clear_pending_load()
+
+	PlayerManager.reset_runtime_stats()
+	play_menu_click_sound()
+
+	await get_tree().create_timer(0.25).timeout
+
+	await MusicManager.fade_out(1.5, true)
+
+	await SceneTransition.change_scene_with_fade(
+		"res://level/testlevel/test_level_new.tscn"
+	)
 func _on_load_slot_pressed(slot: int) -> void:
 	if is_loading_slot:
 		return
@@ -310,6 +332,7 @@ func _on_back_from_load_pressed() -> void:
 
 func _on_quit_pressed() -> void:
 	play_button.disabled = true
+	coop_button.disabled = true
 	load_button.disabled = true
 	quit_button.disabled = true
 

@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://dqcr3e0jm0y5s" path="res://Enemy/vision_area.tscn" id="3_sgrsm"]
 [ext_resource type="AudioStream" uid="uid://b5tfvgycgpcqq" path="res://Monsters/Rat/Sounds/rat - hurt.mp3" id="4_hes5j"]
 [ext_resource type="AudioStream" uid="uid://d2ah3b4812xdk" path="res://Monsters/Bat/Sounds/bat -flying (mp3cut.net).mp3" id="5_hpp6q"]
+[ext_resource type="Script" uid="uid://h7uqioiqnx4s" path="res://00_Globals/EnemyHealthBar.gd" id="9_hes5j"]
 
 [sub_resource type="Animation" id="Animation_atgob"]
 length = 0.001
@@ -385,6 +386,7 @@ radius = 7.0
 [node name="Bat" type="CharacterBody2D" unique_id=1531492568]
 collision_layer = 4
 script = ExtResource("1_qwv3b")
+exp_reward = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1819127372]
 position = Vector2(0, -15)
@@ -444,3 +446,7 @@ monitoring = false
 position = Vector2(19, -34)
 shape = SubResource("CircleShape2D_xhmxk")
 debug_color = Color(0.97044796, 0.06032324, 0.41451028, 0.41960785)
+
+[node name="EnemyHealthBar" type="Node2D" parent="." unique_id=882203174]
+position = Vector2(2, -21)
+script = ExtResource("9_hes5j")

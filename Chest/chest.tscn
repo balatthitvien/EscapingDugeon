@@ -101,3 +101,9 @@ texture = ExtResource("2_urnrk")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1091244294]
 libraries/ = SubResource("AnimationLibrary_h07ny")
+
+[node name="BlockMessageLabel" type="Label" parent="." unique_id=571574990]
+offset_left = -136.0
+offset_top = -28.0
+offset_right = -96.0
+offset_bottom = -5.0

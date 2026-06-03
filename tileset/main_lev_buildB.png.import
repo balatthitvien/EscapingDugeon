@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://clq3h8lhu6tdr"
-path="res://.godot/imported/Gate.png-146dc9ff5394ace425b54f3f29cedaa9.ctex"
+uid="uid://dwnkegrtvse63"
+path="res://.godot/imported/main_lev_buildB.png-03a1907ae14c2edf472500de38f42a27.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Portal/Sprites/Gate.png"
-dest_files=["res://.godot/imported/Gate.png-146dc9ff5394ace425b54f3f29cedaa9.ctex"]
+source_file="res://tileset/main_lev_buildB.png"
+dest_files=["res://.godot/imported/main_lev_buildB.png-03a1907ae14c2edf472500de38f42a27.ctex"]
 
 [params]
 

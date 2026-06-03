@@ -46,9 +46,12 @@ _data = {
 &"idle": SubResource("Animation_n1utt")
 }
 
-[node name="Coin" type="Area2D" unique_id=182171707]
-collision_layer = 128
-collision_mask = 2
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_xttat"]
+radius = 4.0
+height = 12.0
+
+[node name="Coin" type="CharacterBody2D" unique_id=1149606774]
+collision_layer = 0
 script = ExtResource("1_xttat")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=25598236]
@@ -64,3 +67,10 @@ libraries/ = SubResource("AnimationLibrary_hncjg")
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1013763978]
 stream = ExtResource("3_xttat")
 bus = &"SFX"
+
+[node name="CollectArea" type="Area2D" parent="." unique_id=520523292]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CollectArea" unique_id=522976300]
+shape = SubResource("CapsuleShape2D_xttat")

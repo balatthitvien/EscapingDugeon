@@ -29,7 +29,7 @@ enum BatState {
 @onready var die_sound: AudioStreamPlayer2D = $Node2D/Die
 @onready var hurt_sound: AudioStreamPlayer2D = $Node2D/Hurt
 @onready var flying_sound: AudioStreamPlayer2D = $Node2D/Flying
-
+@onready var enemy_health_bar: Node = get_node_or_null("EnemyHealthBar")
 
 @export var max_health: int = 3
 
@@ -88,8 +88,10 @@ var return_up_stuck_timer: float = 0.0
 var last_return_up_position: Vector2 = Vector2.ZERO
 var has_given_exp: bool = false
 func _ready() -> void:
+	add_to_group("enemy")
 	current_health = max_health
-
+	if enemy_health_bar != null and enemy_health_bar.has_method("set_health"):
+		enemy_health_bar.set_health(current_health, max_health)
 	setup_patrol_points()
 
 	hit_box.monitoring = true
@@ -460,6 +462,9 @@ func take_damage(amount: int) -> void:
 
 	print("Bat HP: ", current_health, "/", max_health)
 
+	if enemy_health_bar != null and enemy_health_bar.has_method("show_damage_health"):
+		enemy_health_bar.show_damage_health(current_health, max_health)
+
 	stop_attack_hurt_box()
 
 	if current_health <= 0:
@@ -489,6 +494,8 @@ func start_fall() -> void:
 	give_exp_reward()
 	enemy_died.emit(global_position)
 	is_dead = true
+	if enemy_health_bar != null:
+		enemy_health_bar.visible = false
 	is_hurt_locked = false
 	current_state = BatState.FALL
 
@@ -774,3 +781,17 @@ func start_spawn_burst(burst_velocity: Vector2, burst_time: float = 0.55) -> voi
 
 	update_direction_by_velocity()
 	play_animation("walk", true)
+func is_targeting_player() -> bool:
+	if is_dead:
+		return false
+
+	if player == null:
+		return false
+
+	if not is_instance_valid(player):
+		return false
+
+	if PlayerManager.player == null:
+		return false
+
+	return player == PlayerManager.player

@@ -42,7 +42,14 @@ horizontal_alignment = 1
 [node name="PlayButton" type="Button" parent="VBoxContainer" unique_id=1435026273]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_3w4mj")
-text = "PLAY"
+text = "1 PLAYER
+"
+
+[node name="CoopButton" type="Button" parent="VBoxContainer" unique_id=898907686]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_3w4mj")
+text = "2 PLAYER
+"
 
 [node name="LoadButton" type="Button" parent="VBoxContainer" unique_id=477392143]
 layout_mode = 2

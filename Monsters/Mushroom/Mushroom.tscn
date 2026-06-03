@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://dqcr3e0jm0y5s" path="res://Enemy/vision_area.tscn" id="3_uyrjy"]
 [ext_resource type="AudioStream" uid="uid://iwfw1vresf44" path="res://Monsters/Mushroom/Sound/Mushroom - hurt.mp3" id="4_rjs5v"]
 [ext_resource type="AudioStream" uid="uid://dnsx417uyakgo" path="res://Monsters/Mushroom/Sound/rat-die.mp3" id="5_retkx"]
+[ext_resource type="Script" uid="uid://h7uqioiqnx4s" path="res://00_Globals/EnemyHealthBar.gd" id="8_rjs5v"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_uyrjy"]
 height = 36.0
@@ -345,11 +346,11 @@ radius = 12.0
 [node name="Mushroom" type="CharacterBody2D" unique_id=1114661650]
 collision_layer = 4
 script = ExtResource("1_43la5")
-max_hp = 8
+max_hp = 7
 move_speed = 65.0
 chase_speed = 75.0
 attack_damage = 2
-attack_cooldown = 0.5
+exp_reward = 4
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1792433039]
 texture = ExtResource("1_2x0rx")
@@ -412,3 +413,8 @@ position = Vector2(-113, 18)
 
 [node name="RightPoint" type="Marker2D" parent="PatrolPoints" unique_id=2098402330]
 position = Vector2(138, 18)
+
+[node name="EnemyHealthBar" type="Node2D" parent="." unique_id=1522865226]
+position = Vector2(6, -61)
+script = ExtResource("8_rjs5v")
+bar_size = Vector2(38, 4)

@@ -82,3 +82,6 @@ shape = SubResource("CapsuleShape2D_cyp38")
 visible = false
 position = Vector2(2, -62)
 texture = ExtResource("2_ju8ln")
+
+[node name="TalkHintPoint" type="Marker2D" parent="." unique_id=573025134]
+position = Vector2(3, -55)

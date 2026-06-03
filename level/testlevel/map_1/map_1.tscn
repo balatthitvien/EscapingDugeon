@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://du8dewjo0dlq1" path="res://NPC/NPC - Shop/npc_shop.tscn" id="12_rkj7s"]
 [ext_resource type="PackedScene" uid="uid://vvfmg7o501k2" path="res://00_Globals/map_exit_area.tscn" id="14_p1xp5"]
 [ext_resource type="PackedScene" uid="uid://b4r785lttwoiy" path="res://NPC/NPC - Shop/shop_ui.tscn" id="15_hdl5v"]
+[ext_resource type="Script" uid="uid://y6tobysm1hmr" path="res://level/testlevel/shared_camera.gd" id="16_1d7fa"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wttys"]
 load_path = "res://.godot/imported/parallax1.png-731abb1d8fa148b430a56563c3cb8bd3.ctex"
@@ -169,6 +170,7 @@ height = 78.0
 
 [node name="Map1" type="Node2D" unique_id=737680302]
 script = ExtResource("1_jh7o2")
+hint_npc_paths = Array[NodePath]([NodePath("NPC-Mission"), NodePath("NPC - BlackSmith"), NodePath("NPC - Witcher"), NodePath("NPC - Shop")])
 
 [node name="PlayerHUD" parent="." unique_id=1490889111 instance=ExtResource("2_78p2y")]
 hearts_start_position = Vector2(20, 20)
@@ -182,6 +184,7 @@ exp_bar_frame_count = 7
 position = Vector2(91, -52)
 
 [node name="ParallaxBackground" parent="." unique_id=1288798490 instance=ExtResource("3_0x52o")]
+scroll_ignore_camera_zoom = true
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1000926518]
 texture_filter = 1
@@ -197,6 +200,21 @@ z_index = 10
 position = Vector2(36, -37)
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=613950278]
+limit_left = 0
+limit_top = -220
+limit_right = 770
+limit_bottom = 50
+drag_left_margin = 0.0
+drag_top_margin = 0.0
+drag_right_margin = 0.0
+drag_bottom_margin = 0.0
+
+[node name="Player2" parent="." unique_id=1174922067 instance=ExtResource("5_rkj7s")]
+z_index = 10
+position = Vector2(36, -37)
+player_id = 2
+
+[node name="Camera2D" type="Camera2D" parent="Player2" unique_id=14682755]
 limit_left = 0
 limit_top = -220
 limit_right = 770
@@ -261,15 +279,17 @@ position = Vector2(476, -40)
 collision_layer = 0
 
 [node name="SpawnPoints" type="Node2D" parent="." unique_id=1406934639]
-position = Vector2(763, -50)
+position = Vector2(735, -50)
 
 [node name="FromMap2" type="Marker2D" parent="SpawnPoints" unique_id=1167777624]
-position = Vector2(-25, 0)
+position = Vector2(-1, 0)
 
 [node name="ExitToMap2" parent="." unique_id=22245689 instance=ExtResource("14_p1xp5")]
-position = Vector2(762, -49)
+position = Vector2(764, -49)
 target_scene_path = "uid://clxcs5278p4wt"
 target_spawn_point_name = "FromMap1"
+fade_out_time = 0.7
+fade_in_time = 0.7
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="ExitToMap2" unique_id=597787004]
 position = Vector2(14, -30)
@@ -282,3 +302,12 @@ position = Vector2(92, -46)
 position = Vector2(-4, 0)
 
 [node name="ShopUI" parent="." unique_id=1325930517 instance=ExtResource("15_hdl5v")]
+
+[node name="SharedCamera" type="Camera2D" parent="." unique_id=1338496264]
+limit_left = 0
+limit_top = -220
+limit_right = 1095
+limit_bottom = 50
+script = ExtResource("16_1d7fa")
+min_zoom = Vector2(0.45, 1.5)
+horizontal_margin = 200.0

@@ -21,6 +21,7 @@ var current_state: NPCState = NPCState.IDLE
 
 var player_near: bool = false
 var player: Player = null
+var players_near: Dictionary = {}
 
 var is_busy: bool = false
 var is_talking: bool = false
@@ -75,8 +76,13 @@ func _process(_delta: float) -> void:
 	if not player_near:
 		return
 
-	if Input.is_action_just_pressed("interact"):
-		start_dialog()
+	var action_player := get_player_pressed_interact()
+
+	if action_player == null:
+		return
+
+	player = action_player
+	start_dialog()
 
 
 func start_random_behavior() -> void:
@@ -144,7 +150,16 @@ func start_dialog() -> void:
 	if is_talking:
 		return
 
+	if current_state == NPCState.DIALOG:
+		return
+
 	if not player_near:
+		return
+
+	if player == null:
+		player = get_any_near_player()
+
+	if player == null:
 		return
 
 	is_talking = true
@@ -154,8 +169,7 @@ func start_dialog() -> void:
 	if talk_indicator != null:
 		talk_indicator.visible = false
 
-	if player != null:
-		player.set_control_enabled(false)
+	set_all_players_control_enabled(false)
 
 	if anim != null:
 		if anim.current_animation == "work_loop" or anim.current_animation == "idle_to_work":
@@ -206,9 +220,7 @@ func _on_dialog_finished() -> void:
 
 
 func finish_without_upgrade() -> void:
-	if player != null:
-		player.set_control_enabled(true)
-
+	set_all_players_control_enabled(true)
 	end_dialog()
 
 
@@ -227,21 +239,23 @@ func open_upgrade_menu() -> void:
 
 	if upgrade_ui == null:
 		push_error("Không mở được menu upgrade. Kiểm tra đã gán Upgrade UI Scene chưa.")
+		set_all_players_control_enabled(true)
+		end_dialog()
+		return
 
-		if player != null:
-			player.set_control_enabled(true)
+	var stats_player := get_upgrade_stats_player()
 
+	if stats_player == null:
+		push_error("Không tìm thấy Player để mở Upgrade UI.")
+		set_all_players_control_enabled(true)
 		end_dialog()
 		return
 
 	if upgrade_ui.has_method("open_menu"):
-		upgrade_ui.open_menu(player)
+		upgrade_ui.open_menu(stats_player)
 	else:
 		push_error("Upgrade UI thiếu hàm open_menu().")
-
-		if player != null:
-			player.set_control_enabled(true)
-
+		set_all_players_control_enabled(true)
 		end_dialog()
 
 
@@ -271,9 +285,7 @@ func create_upgrade_ui() -> void:
 
 
 func _on_upgrade_ui_closed() -> void:
-	if player != null:
-		player.set_control_enabled(true)
-
+	set_all_players_control_enabled(true)
 	end_dialog()
 
 
@@ -305,7 +317,8 @@ func try_set_player_near(target: Node) -> void:
 	if detected_player == null:
 		return
 
-	player_near = true
+	players_near[detected_player.get_instance_id()] = detected_player
+	player_near = !players_near.is_empty()
 	player = detected_player
 
 	if current_state != NPCState.DIALOG and talk_indicator != null:
@@ -318,13 +331,17 @@ func try_remove_player_near(target: Node) -> void:
 	if detected_player == null:
 		return
 
-	if detected_player != player:
-		return
+	var id := detected_player.get_instance_id()
 
-	player_near = false
-	player = null
+	if players_near.has(id):
+		players_near.erase(id)
 
-	if talk_indicator != null:
+	player_near = !players_near.is_empty()
+
+	if player == detected_player:
+		player = get_any_near_player()
+
+	if !player_near and talk_indicator != null:
 		talk_indicator.visible = false
 
 
@@ -333,6 +350,9 @@ func find_player_from_node(node: Node) -> Player:
 
 	while current != null:
 		if current is Player:
+			return current as Player
+
+		if current.is_in_group("players"):
 			return current as Player
 
 		if current.is_in_group("player"):
@@ -344,7 +364,100 @@ func find_player_from_node(node: Node) -> Player:
 		if current.name == "Player":
 			return current as Player
 
+		if current.name == "Player2":
+			return current as Player
+
 		current = current.get_parent()
+
+	return null
+
+
+func get_any_near_player() -> Player:
+	for key in players_near.keys():
+		var p: Player = players_near[key]
+
+		if p != null and is_instance_valid(p):
+			return p
+
+	return null
+
+
+func get_player_pressed_interact() -> Player:
+	for key in players_near.keys():
+		var p: Player = players_near[key]
+
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		if p.has_method("is_interact_just_pressed"):
+			if p.is_interact_just_pressed():
+				return p
+		else:
+			var action_name := get_interact_action_for_player(p)
+
+			if Input.is_action_just_pressed(action_name):
+				return p
+
+	return null
+
+
+func get_interact_action_for_player(target_player: Player) -> StringName:
+	if !is_two_player_mode():
+		return &"interact"
+
+	var id_value: int = int(target_player.get("player_id"))
+
+	if id_value == 1:
+		return &"p1_interact"
+
+	return &"p2_interact"
+
+
+func is_two_player_mode() -> bool:
+	var game_mode := get_node_or_null("/root/GameMode")
+
+	if game_mode == null:
+		return false
+
+	return game_mode.is_two_players()
+
+
+func set_all_players_control_enabled(state: bool) -> void:
+	if is_two_player_mode():
+		var players := get_tree().get_nodes_in_group("players")
+
+		for p in players:
+			if p == null:
+				continue
+
+			if !is_instance_valid(p):
+				continue
+
+			if p.has_method("set_control_enabled"):
+				p.set_control_enabled(state)
+
+		return
+
+	if player != null and player.has_method("set_control_enabled"):
+		player.set_control_enabled(state)
+	elif PlayerManager.player != null and PlayerManager.player.has_method("set_control_enabled"):
+		PlayerManager.player.set_control_enabled(state)
+
+
+func get_upgrade_stats_player() -> Player:
+	if PlayerManager.player != null and PlayerManager.player is Player:
+		return PlayerManager.player as Player
+
+	if player != null:
+		return player
+
+	var near_player := get_any_near_player()
+
+	if near_player != null:
+		return near_player
 
 	return null
 

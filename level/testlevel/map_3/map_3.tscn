@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://cgbk71ccahmcg" path="res://tileset/Finish.png" id="4_mlmes"]
 [ext_resource type="Texture2D" uid="uid://dfdc2x7woeqy7" path="res://tileset/Lava World Tileset.png" id="5_mlmes"]
 [ext_resource type="Script" uid="uid://mbalxyuwofgr" path="res://level/testlevel/tilemap_bounds.gd" id="6_2whmt"]
+[ext_resource type="Texture2D" uid="uid://b7g0xn6ewumxn" path="res://tileset/other_and_decorative.png" id="7_tbk57"]
 [ext_resource type="Texture2D" uid="uid://bg22nax8jdmoj" path="res://tileset/caslePropsSheet.png" id="8_2whmt"]
 [ext_resource type="PackedScene" uid="uid://mxhv6v41bude" path="res://Player/player.tscn" id="10_mlmes"]
 [ext_resource type="PackedScene" uid="uid://2e4mackmj7wy" path="res://Chest/chest.tscn" id="11_2whmt"]
@@ -816,12 +817,527 @@ texture = ExtResource("5_mlmes")
 7:8/0 = 0
 8:8/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3vddv"]
+texture = ExtResource("7_tbk57")
+1:1/0 = 0
+2:1/0 = 0
+4:1/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+9:1/0 = 0
+10:1/0 = 0
+12:1/0 = 0
+14:1/0 = 0
+16:1/0 = 0
+19:1/0 = 0
+21:1/0 = 0
+22:1/0 = 0
+23:1/0 = 0
+25:1/0 = 0
+26:1/0 = 0
+28:1/0 = 0
+29:1/0 = 0
+31:1/0 = 0
+32:1/0 = 0
+33:1/0 = 0
+34:1/0 = 0
+35:1/0 = 0
+36:1/0 = 0
+37:1/0 = 0
+1:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+10:2/0 = 0
+12:2/0 = 0
+14:2/0 = 0
+16:2/0 = 0
+19:2/0 = 0
+21:2/0 = 0
+22:2/0 = 0
+23:2/0 = 0
+25:2/0 = 0
+26:2/0 = 0
+28:2/0 = 0
+29:2/0 = 0
+31:2/0 = 0
+32:2/0 = 0
+33:2/0 = 0
+34:2/0 = 0
+35:2/0 = 0
+36:2/0 = 0
+37:2/0 = 0
+12:3/0 = 0
+14:3/0 = 0
+16:3/0 = 0
+19:3/0 = 0
+21:3/0 = 0
+22:3/0 = 0
+23:3/0 = 0
+25:3/0 = 0
+26:3/0 = 0
+31:3/0 = 0
+32:3/0 = 0
+33:3/0 = 0
+34:3/0 = 0
+35:3/0 = 0
+36:3/0 = 0
+37:3/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+19:4/0 = 0
+21:4/0 = 0
+22:4/0 = 0
+23:4/0 = 0
+31:4/0 = 0
+32:4/0 = 0
+33:4/0 = 0
+34:4/0 = 0
+35:4/0 = 0
+36:4/0 = 0
+37:4/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+4:5/0 = 0
+6:5/0 = 0
+10:5/0 = 0
+21:5/0 = 0
+22:5/0 = 0
+23:5/0 = 0
+32:5/0 = 0
+33:5/0 = 0
+34:5/0 = 0
+35:5/0 = 0
+36:5/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+8:6/0 = 0
+9:6/0 = 0
+10:6/0 = 0
+11:6/0 = 0
+36:6/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+4:7/0 = 0
+5:7/0 = 0
+6:7/0 = 0
+8:7/0 = 0
+9:7/0 = 0
+10:7/0 = 0
+11:7/0 = 0
+13:7/0 = 0
+15:7/0 = 0
+16:7/0 = 0
+19:7/0 = 0
+20:7/0 = 0
+21:7/0 = 0
+22:7/0 = 0
+23:7/0 = 0
+24:7/0 = 0
+25:7/0 = 0
+27:7/0 = 0
+28:7/0 = 0
+30:7/0 = 0
+31:7/0 = 0
+33:7/0 = 0
+34:7/0 = 0
+35:7/0 = 0
+37:7/0 = 0
+19:8/0 = 0
+20:8/0 = 0
+21:8/0 = 0
+22:8/0 = 0
+23:8/0 = 0
+24:8/0 = 0
+25:8/0 = 0
+27:8/0 = 0
+28:8/0 = 0
+30:8/0 = 0
+31:8/0 = 0
+33:8/0 = 0
+34:8/0 = 0
+35:8/0 = 0
+37:8/0 = 0
+1:9/0 = 0
+2:9/0 = 0
+4:9/0 = 0
+5:9/0 = 0
+19:9/0 = 0
+20:9/0 = 0
+21:9/0 = 0
+22:9/0 = 0
+23:9/0 = 0
+24:9/0 = 0
+25:9/0 = 0
+30:9/0 = 0
+31:9/0 = 0
+33:9/0 = 0
+34:9/0 = 0
+35:9/0 = 0
+37:9/0 = 0
+1:10/0 = 0
+2:10/0 = 0
+4:10/0 = 0
+5:10/0 = 0
+13:10/0 = 0
+19:10/0 = 0
+20:10/0 = 0
+21:10/0 = 0
+22:10/0 = 0
+23:10/0 = 0
+24:10/0 = 0
+25:10/0 = 0
+33:10/0 = 0
+34:10/0 = 0
+35:10/0 = 0
+37:10/0 = 0
+1:11/0 = 0
+2:11/0 = 0
+4:11/0 = 0
+5:11/0 = 0
+12:11/0 = 0
+14:11/0 = 0
+20:11/0 = 0
+21:11/0 = 0
+22:11/0 = 0
+23:11/0 = 0
+24:11/0 = 0
+33:11/0 = 0
+34:11/0 = 0
+35:11/0 = 0
+1:12/0 = 0
+2:12/0 = 0
+4:12/0 = 0
+5:12/0 = 0
+13:12/0 = 0
+20:12/0 = 0
+19:13/0 = 0
+21:13/0 = 0
+22:13/0 = 0
+23:13/0 = 0
+25:13/0 = 0
+26:13/0 = 0
+28:13/0 = 0
+29:13/0 = 0
+31:13/0 = 0
+32:13/0 = 0
+33:13/0 = 0
+34:13/0 = 0
+35:13/0 = 0
+36:13/0 = 0
+37:13/0 = 0
+19:14/0 = 0
+21:14/0 = 0
+22:14/0 = 0
+23:14/0 = 0
+25:14/0 = 0
+26:14/0 = 0
+28:14/0 = 0
+29:14/0 = 0
+31:14/0 = 0
+32:14/0 = 0
+33:14/0 = 0
+34:14/0 = 0
+35:14/0 = 0
+36:14/0 = 0
+37:14/0 = 0
+1:15/0 = 0
+2:15/0 = 0
+3:15/0 = 0
+6:15/0 = 0
+7:15/0 = 0
+19:15/0 = 0
+21:15/0 = 0
+22:15/0 = 0
+23:15/0 = 0
+25:15/0 = 0
+26:15/0 = 0
+31:15/0 = 0
+32:15/0 = 0
+33:15/0 = 0
+34:15/0 = 0
+35:15/0 = 0
+36:15/0 = 0
+37:15/0 = 0
+1:16/0 = 0
+2:16/0 = 0
+3:16/0 = 0
+6:16/0 = 0
+7:16/0 = 0
+9:16/0 = 0
+10:16/0 = 0
+12:16/0 = 0
+13:16/0 = 0
+19:16/0 = 0
+21:16/0 = 0
+22:16/0 = 0
+23:16/0 = 0
+31:16/0 = 0
+32:16/0 = 0
+33:16/0 = 0
+34:16/0 = 0
+35:16/0 = 0
+36:16/0 = 0
+37:16/0 = 0
+1:17/0 = 0
+2:17/0 = 0
+3:17/0 = 0
+6:17/0 = 0
+7:17/0 = 0
+9:17/0 = 0
+10:17/0 = 0
+12:17/0 = 0
+13:17/0 = 0
+21:17/0 = 0
+22:17/0 = 0
+23:17/0 = 0
+32:17/0 = 0
+33:17/0 = 0
+34:17/0 = 0
+35:17/0 = 0
+36:17/0 = 0
+1:18/0 = 0
+2:18/0 = 0
+3:18/0 = 0
+36:18/0 = 0
+5:19/0 = 0
+6:19/0 = 0
+8:19/0 = 0
+9:19/0 = 0
+19:19/0 = 0
+20:19/0 = 0
+21:19/0 = 0
+22:19/0 = 0
+23:19/0 = 0
+24:19/0 = 0
+25:19/0 = 0
+27:19/0 = 0
+28:19/0 = 0
+30:19/0 = 0
+31:19/0 = 0
+33:19/0 = 0
+34:19/0 = 0
+35:19/0 = 0
+37:19/0 = 0
+1:20/0 = 0
+2:20/0 = 0
+3:20/0 = 0
+5:20/0 = 0
+6:20/0 = 0
+8:20/0 = 0
+9:20/0 = 0
+11:20/0 = 0
+12:20/0 = 0
+19:20/0 = 0
+20:20/0 = 0
+21:20/0 = 0
+22:20/0 = 0
+23:20/0 = 0
+24:20/0 = 0
+25:20/0 = 0
+27:20/0 = 0
+28:20/0 = 0
+30:20/0 = 0
+31:20/0 = 0
+33:20/0 = 0
+34:20/0 = 0
+35:20/0 = 0
+37:20/0 = 0
+1:21/0 = 0
+2:21/0 = 0
+3:21/0 = 0
+5:21/0 = 0
+6:21/0 = 0
+8:21/0 = 0
+9:21/0 = 0
+11:21/0 = 0
+12:21/0 = 0
+19:21/0 = 0
+20:21/0 = 0
+21:21/0 = 0
+22:21/0 = 0
+23:21/0 = 0
+24:21/0 = 0
+25:21/0 = 0
+30:21/0 = 0
+31:21/0 = 0
+33:21/0 = 0
+34:21/0 = 0
+35:21/0 = 0
+37:21/0 = 0
+19:22/0 = 0
+20:22/0 = 0
+21:22/0 = 0
+22:22/0 = 0
+23:22/0 = 0
+24:22/0 = 0
+25:22/0 = 0
+33:22/0 = 0
+34:22/0 = 0
+35:22/0 = 0
+37:22/0 = 0
+20:23/0 = 0
+21:23/0 = 0
+22:23/0 = 0
+23:23/0 = 0
+24:23/0 = 0
+33:23/0 = 0
+34:23/0 = 0
+35:23/0 = 0
+20:24/0 = 0
+19:26/0 = 0
+21:26/0 = 0
+22:26/0 = 0
+23:26/0 = 0
+25:26/0 = 0
+26:26/0 = 0
+28:26/0 = 0
+29:26/0 = 0
+31:26/0 = 0
+32:26/0 = 0
+33:26/0 = 0
+34:26/0 = 0
+35:26/0 = 0
+36:26/0 = 0
+37:26/0 = 0
+19:27/0 = 0
+21:27/0 = 0
+22:27/0 = 0
+23:27/0 = 0
+25:27/0 = 0
+26:27/0 = 0
+28:27/0 = 0
+29:27/0 = 0
+31:27/0 = 0
+32:27/0 = 0
+33:27/0 = 0
+34:27/0 = 0
+35:27/0 = 0
+36:27/0 = 0
+37:27/0 = 0
+19:28/0 = 0
+21:28/0 = 0
+22:28/0 = 0
+23:28/0 = 0
+25:28/0 = 0
+26:28/0 = 0
+31:28/0 = 0
+32:28/0 = 0
+33:28/0 = 0
+34:28/0 = 0
+35:28/0 = 0
+36:28/0 = 0
+37:28/0 = 0
+19:29/0 = 0
+21:29/0 = 0
+22:29/0 = 0
+23:29/0 = 0
+25:29/0 = 0
+31:29/0 = 0
+32:29/0 = 0
+33:29/0 = 0
+34:29/0 = 0
+35:29/0 = 0
+36:29/0 = 0
+37:29/0 = 0
+19:30/0 = 0
+21:30/0 = 0
+22:30/0 = 0
+23:30/0 = 0
+32:30/0 = 0
+33:30/0 = 0
+34:30/0 = 0
+35:30/0 = 0
+36:30/0 = 0
+21:31/0 = 0
+22:31/0 = 0
+23:31/0 = 0
+33:31/0 = 0
+34:31/0 = 0
+35:31/0 = 0
+36:31/0 = 0
+19:32/0 = 0
+20:32/0 = 0
+21:32/0 = 0
+22:32/0 = 0
+23:32/0 = 0
+24:32/0 = 0
+25:32/0 = 0
+27:32/0 = 0
+28:32/0 = 0
+30:32/0 = 0
+31:32/0 = 0
+33:32/0 = 0
+34:32/0 = 0
+35:32/0 = 0
+37:32/0 = 0
+19:33/0 = 0
+20:33/0 = 0
+21:33/0 = 0
+22:33/0 = 0
+23:33/0 = 0
+24:33/0 = 0
+25:33/0 = 0
+27:33/0 = 0
+28:33/0 = 0
+30:33/0 = 0
+31:33/0 = 0
+33:33/0 = 0
+34:33/0 = 0
+35:33/0 = 0
+37:33/0 = 0
+19:34/0 = 0
+20:34/0 = 0
+21:34/0 = 0
+22:34/0 = 0
+23:34/0 = 0
+24:34/0 = 0
+25:34/0 = 0
+30:34/0 = 0
+31:34/0 = 0
+33:34/0 = 0
+34:34/0 = 0
+35:34/0 = 0
+37:34/0 = 0
+19:35/0 = 0
+20:35/0 = 0
+21:35/0 = 0
+22:35/0 = 0
+23:35/0 = 0
+24:35/0 = 0
+25:35/0 = 0
+31:35/0 = 0
+33:35/0 = 0
+34:35/0 = 0
+35:35/0 = 0
+37:35/0 = 0
+20:36/0 = 0
+21:36/0 = 0
+22:36/0 = 0
+23:36/0 = 0
+24:36/0 = 0
+33:36/0 = 0
+34:36/0 = 0
+35:36/0 = 0
+37:36/0 = 0
+20:37/0 = 0
+21:37/0 = 0
+22:37/0 = 0
+23:37/0 = 0
+33:37/0 = 0
+34:37/0 = 0
+35:37/0 = 0
+2:2/0 = 0
+
 [sub_resource type="TileSet" id="TileSet_xhd68"]
 sources/0 = SubResource("TileSetAtlasSource_mlmes")
 sources/1 = SubResource("TileSetAtlasSource_2whmt")
 sources/2 = SubResource("TileSetAtlasSource_ahgad")
 sources/3 = SubResource("TileSetAtlasSource_421q2")
 sources/4 = SubResource("TileSetAtlasSource_2oq4c")
+sources/5 = SubResource("TileSetAtlasSource_3vddv")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2vkfd"]
 texture = ExtResource("1_212n0")
@@ -2044,8 +2560,8 @@ size = Vector2(36, 73.5)
 script = ExtResource("1_ivnfr")
 
 [node name="TileMapLayer2" type="TileMapLayer" parent="." unique_id=1170553276]
-z_index = 10
-tile_map_data = PackedByteArray("AAACAO7/AgACAA8AAAADAO7/AgADAA8AAAACAO//AgACAA8AAAADAO//AgADAA8AAAACAPD/AgACAA8AAAADAPD/AgADAA8AAAACAPH/AgACAA8AAAADAPH/AgADAA8AAAACAPL/AgACAA8AAAADAPL/AgADAA8AAAACAPP/AgACABAAAAADAPP/AgADABAAAAACAO3/AgACAA4AAAADAO3/AgADAA4AAAAEAPL/AgAEAA8AAAAEAPP/AgAEABAAAAAFAPL/AgAFAA8AAAAFAPP/AgAFABAAAAAAAPL/AgAEAA8AAAAAAPP/AgAEABAAAAABAPL/AgAFAA8AAAABAPP/AgAFABAAAAAVAOP/AgACAA4AAAAWAOP/AgADAA4AAAAVAOT/AgACAA8AAAAWAOT/AgADAA8AAAAVAOX/AgACAA8AAAAWAOX/AgADAA8AAAAVAOb/AgACAA8AAAAWAOb/AgADAA8AAAAVAOf/AgACAA8AAAAWAOf/AgADAA8AAAAVAOj/AgACAA8AAAAWAOj/AgADAA8AAAAVAOn/AgACAA8AAAAWAOn/AgADAA8AAAAVAOr/AgACAA8AAAAWAOr/AgADAA8AAAAVAOv/AgACAA8AAAAWAOv/AgADAA8AAAAVAOz/AgACAA8AAAAWAOz/AgADAA8AAAAVAO3/AgACAA8AAAAWAO3/AgADAA8AAAAVAO7/AgACAA8AAAAWAO7/AgADAA8AAAAVAO//AgACAA8AAAAWAO//AgADAA8AAAAVAPD/AgACAA8AAAAWAPD/AgADAA8AAAAVAPH/AgACAA8AAAAWAPH/AgADAA8AAAAVAPL/AgACAA8AAAAWAPL/AgADAA8AAAAVAPP/AgACABAAAAAWAPP/AgADABAAAAAWAPn/AAAKAAkAAAAGAO7/AAAMAAkAAAAIAPP/AAAMAAsAAAAKAOr/AAAKAAkAAAAEAO7/BAAGAAUAAAAEAO//BAAHAAUAAAAEAPD/BAAHAAUAAAANAPv/BAAGAAUAAAANAP3/BAAHAAUAAAANAPz/BAAHAAUAAABOAPr/AgAKAAUAAABOAPv/AgAKAAQAAABOAPz/AgAKAAUAAABOAP3/AgAKAAYAAABOAPn/AgAKAAQAAABOAPj/AgAKAAQAAABOAPf/AgAKAAMAAAAQAP//AwACAA8AAAAQAAAAAwACABAAAAARAP//AwADAA8AAAARAAAAAwADABAAAAA5AP7/AwAFAA8AAAA5AP//AwAFABAAAAA6AP7/AwAGAA8AAAA6AP//AwAGABAAAAAoAPz/AwALABEAAAAoAP3/AwALABIAAABHAPz/AwANAA8AAABHAP3/AwANABAAAABIAPz/AwAOAA8AAABIAP3/AwAOABAAAAAgAPj/AwAVAAoAAAAgAPn/AwAVAAsAAAAgAPr/AwAVAAwAAAAgAPv/AwAVAA0AAAAgAPz/AwAVAA4AAAAhAPj/AwAWAAoAAAAhAPn/AwAWAAsAAAAhAPr/AwAWAAwAAAAhAPv/AwAWAA0AAAAhAPz/AwAWAA4AAAAzAOf/AgAIAA0AAAAzAOb/AgAIAAwAAAAzAOX/AgAIAAwAAAAzAOT/AgAIAAwAAAAzAOP/AgAIAAwAAAAzAOL/AgAIAAwAAAAzAOH/AgAIAAwAAAAzAOD/AgAIAAwAAAAvAOf/AgAIAA0AAAAvAOb/AgAIAAwAAAAvAOX/AgAIAAwAAAAvAOT/AgAIAAwAAAAvAOP/AgAIAAwAAAAvAOL/AgAIAAwAAAAvAOH/AgAIAAwAAAAvAOD/AgAIAAwAAAAvAN//AgAIAAwAAAAzAN//AgAIAAwAAAAzAN7/AgAIAAsAAAAvAN7/AgAIAAsAAAALAPv/AgACAA4AAAAMAPv/AgADAA4AAAALAPz/AgACAA8AAAAMAPz/AgADAA8AAAALAP3/AgACAA8AAAAMAP3/AgADAA8AAAALAP7/AgACAA8AAAAMAP7/AgADAA8AAAALAP//AgACAA8AAAAMAP//AgADAA8AAAALAAAAAgACAA8AAAAMAAAAAgADAA8AAAALAAEAAgACABAAAAAMAAEAAgADABAAAABGAOH/AgACAA4AAABHAOH/AgADAA4AAABGAOL/AgACAA8AAABHAOL/AgADAA8AAABGAOP/AgACAA8AAABHAOP/AgADAA8AAABGAOT/AgACAA8AAABHAOT/AgADAA8AAABGAOX/AgACAA8AAABHAOX/AgADAA8AAABGAOb/AgACAA8AAABHAOb/AgADAA8AAABGAOf/AgACABAAAABHAOf/AgADABAAAAAGAPP/AgACAAkAAABUAOf/AgACAAkAAAA+APT/AgAUAAAAAAA+APX/AgAUAAEAAAA+APb/AgAUAAIAAAA/APT/AgAVAAAAAAA/APX/AgAVAAEAAAA/APb/AgAVAAIAAABAAPT/AgAWAAAAAABAAPX/AgAWAAEAAABAAPb/AgAWAAIAAABLAPH/AwAVAAoAAABLAPL/AwAVAAsAAABLAPP/AwAVAAwAAABLAPT/AwAVAA0AAABLAPX/AwAVAA4AAABMAPH/AwAWAAoAAABMAPL/AwAWAAsAAABMAPP/AwAWAAwAAABMAPT/AwAWAA0AAABMAPX/AwAWAA4AAAA=")
+z_index = 1
+tile_map_data = PackedByteArray("AAACAO7/AgACAA8AAAADAO7/AgADAA8AAAACAO//AgACAA8AAAADAO//AgADAA8AAAACAPD/AgACAA8AAAADAPD/AgADAA8AAAACAPH/AgACAA8AAAADAPH/AgADAA8AAAACAPL/AgACAA8AAAADAPL/AgADAA8AAAACAPP/AgACABAAAAADAPP/AgADABAAAAACAO3/AgACAA4AAAADAO3/AgADAA4AAAAEAPL/AgAEAA8AAAAEAPP/AgAEABAAAAAFAPL/AgAFAA8AAAAFAPP/AgAFABAAAAAAAPL/AgAEAA8AAAAAAPP/AgAEABAAAAABAPL/AgAFAA8AAAABAPP/AgAFABAAAAAVAOP/AgACAA4AAAAWAOP/AgADAA4AAAAVAOT/AgACAA8AAAAWAOT/AgADAA8AAAAVAOX/AgACAA8AAAAWAOX/AgADAA8AAAAVAOb/AgACAA8AAAAWAOb/AgADAA8AAAAVAOf/AgACAA8AAAAWAOf/AgADAA8AAAAVAOj/AgACAA8AAAAWAOj/AgADAA8AAAAVAOn/AgACAA8AAAAWAOn/AgADAA8AAAAVAOr/AgACAA8AAAAWAOr/AgADAA8AAAAVAOv/AgACAA8AAAAWAOv/AgADAA8AAAAVAOz/AgACAA8AAAAWAOz/AgADAA8AAAAVAO3/AgACAA8AAAAWAO3/AgADAA8AAAAVAO7/AgACAA8AAAAWAO7/AgADAA8AAAAVAO//AgACAA8AAAAWAO//AgADAA8AAAAVAPD/AgACAA8AAAAWAPD/AgADAA8AAAAVAPH/AgACAA8AAAAWAPH/AgADAA8AAAAVAPL/AgACAA8AAAAWAPL/AgADAA8AAAAVAPP/AgACABAAAAAWAPP/AgADABAAAAAWAPn/AAAKAAkAAAAGAO7/AAAMAAkAAAAIAPP/AAAMAAsAAAAKAOr/AAAKAAkAAAAEAO7/BAAGAAUAAAAEAO//BAAHAAUAAAAEAPD/BAAHAAUAAAANAPv/BAAGAAUAAAANAP3/BAAHAAUAAAANAPz/BAAHAAUAAABOAPr/AgAKAAUAAABOAPv/AgAKAAQAAABOAPz/AgAKAAUAAABOAP3/AgAKAAYAAABOAPn/AgAKAAQAAABOAPj/AgAKAAQAAABOAPf/AgAKAAMAAAAQAP//AwACAA8AAAAQAAAAAwACABAAAAARAP//AwADAA8AAAARAAAAAwADABAAAAA5AP7/AwAFAA8AAAA5AP//AwAFABAAAAA6AP7/AwAGAA8AAAA6AP//AwAGABAAAAAoAPz/AwALABEAAAAoAP3/AwALABIAAABHAPz/AwANAA8AAABHAP3/AwANABAAAABIAPz/AwAOAA8AAABIAP3/AwAOABAAAAAgAPj/AwAVAAoAAAAgAPn/AwAVAAsAAAAgAPr/AwAVAAwAAAAgAPv/AwAVAA0AAAAgAPz/AwAVAA4AAAAhAPj/AwAWAAoAAAAhAPn/AwAWAAsAAAAhAPr/AwAWAAwAAAAhAPv/AwAWAA0AAAAhAPz/AwAWAA4AAAAzAOf/AgAIAA0AAAAzAOb/AgAIAAwAAAAzAOX/AgAIAAwAAAAzAOT/AgAIAAwAAAAzAOP/AgAIAAwAAAAzAOL/AgAIAAwAAAAzAOH/AgAIAAwAAAAzAOD/AgAIAAwAAAAvAOf/AgAIAA0AAAAvAOb/AgAIAAwAAAAvAOX/AgAIAAwAAAAvAOT/AgAIAAwAAAAvAOP/AgAIAAwAAAAvAOL/AgAIAAwAAAAvAOH/AgAIAAwAAAAvAOD/AgAIAAwAAAAvAN//AgAIAAwAAAAzAN//AgAIAAwAAAAzAN7/AgAIAAsAAAAvAN7/AgAIAAsAAAALAPv/AgACAA4AAAAMAPv/AgADAA4AAAALAPz/AgACAA8AAAAMAPz/AgADAA8AAAALAP3/AgACAA8AAAAMAP3/AgADAA8AAAALAP7/AgACAA8AAAAMAP7/AgADAA8AAAALAP//AgACAA8AAAAMAP//AgADAA8AAAALAAAAAgACAA8AAAAMAAAAAgADAA8AAAALAAEAAgACABAAAAAMAAEAAgADABAAAABGAOH/AgACAA4AAABHAOH/AgADAA4AAABGAOL/AgACAA8AAABHAOL/AgADAA8AAABGAOP/AgACAA8AAABHAOP/AgADAA8AAABGAOT/AgACAA8AAABHAOT/AgADAA8AAABGAOX/AgACAA8AAABHAOX/AgADAA8AAABGAOb/AgACAA8AAABHAOb/AgADAA8AAABGAOf/AgACABAAAABHAOf/AgADABAAAAAGAPP/AgACAAkAAABUAOf/AgACAAkAAAA+APT/AgAUAAAAAAA+APX/AgAUAAEAAAA+APb/AgAUAAIAAAA/APT/AgAVAAAAAAA/APX/AgAVAAEAAAA/APb/AgAVAAIAAABAAPT/AgAWAAAAAABAAPX/AgAWAAEAAABAAPb/AgAWAAIAAABLAPH/AwAVAAoAAABLAPL/AwAVAAsAAABLAPP/AwAVAAwAAABLAPT/AwAVAA0AAABLAPX/AwAVAA4AAABMAPH/AwAWAAoAAABMAPL/AwAWAAsAAABMAPP/AwAWAAwAAABMAPT/AwAWAA0AAABMAPX/AwAWAA4AAAAIAOr/BQABAAEAAAAIAOv/BQABAAIAAAAJAOr/BQACAAEAAAAJAOv/BQACAAIAAAAhAP7/BQAGAA8AAAAhAP//BQAGABAAAAAhAAAABQAGABEAAAAiAP7/BQAHAA8AAAAiAP//BQAHABAAAAAiAAAABQAHABEAAABAAP7/BQAPAAcAAABBAP7/BQAQAAcAAABIAOf/BQAPAAcAAABJAOf/BQAQAAcAAAArAN7/BQAQAAEAAAArAN//BQAQAAIAAAArAOD/BQAQAAMAAAA3AN7/BQAQAAEAAAA3AN//BQAQAAIAAAA3AOD/BQAQAAMAAAA=")
 tile_set = SubResource("TileSet_xhd68")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1701419919]
@@ -2109,6 +2625,7 @@ position = Vector2(1227, -459)
 
 [node name="CampFire" parent="." unique_id=937363598 instance=ExtResource("12_akjv8")]
 position = Vector2(119, 9)
+campfire_id = "campfire_map_3"
 
 [node name="Lever" parent="." unique_id=215374595 instance=ExtResource("13_bagmf")]
 position = Vector2(305, 3)
@@ -2121,6 +2638,52 @@ bat_scene = ExtResource("15_1ti83")
 [node name="PlayerHUD" parent="." unique_id=1490889111 instance=ExtResource("16_tmun2")]
 
 [node name="YouDiedUI" parent="." unique_id=1526660008 instance=ExtResource("17_5b5f5")]
+
+[node name="Monsters" type="Node" parent="." unique_id=30108087]
+
+[node name="MushroomSpawner3" type="Node2D" parent="Monsters" unique_id=1330006530]
+position = Vector2(1228, -406)
+script = ExtResource("21_2oq4c")
+enemy_scene = ExtResource("24_xhd68")
+coin_scene = ExtResource("23_akjv8")
+coin_drop_count = 2
+
+[node name="BatSpawner9" type="Node2D" parent="Monsters" unique_id=1010396063]
+position = Vector2(927, -460)
+script = ExtResource("21_2oq4c")
+enemy_scene = ExtResource("15_1ti83")
+coin_scene = ExtResource("23_akjv8")
+
+[node name="BatSpawner8" type="Node2D" parent="Monsters" unique_id=696875116]
+position = Vector2(655, -458)
+script = ExtResource("21_2oq4c")
+enemy_scene = ExtResource("15_1ti83")
+coin_scene = ExtResource("23_akjv8")
+
+[node name="BatSpawner7" type="Node2D" parent="Monsters" unique_id=1687977625]
+position = Vector2(539, -307)
+script = ExtResource("21_2oq4c")
+enemy_scene = ExtResource("15_1ti83")
+coin_scene = ExtResource("23_akjv8")
+
+[node name="BatSpawner6" type="Node2D" parent="Monsters" unique_id=337764797]
+position = Vector2(849, -155)
+script = ExtResource("21_2oq4c")
+enemy_scene = ExtResource("15_1ti83")
+coin_scene = ExtResource("23_akjv8")
+
+[node name="RatSpawner2" type="Node2D" parent="Monsters" unique_id=1442965189]
+position = Vector2(685, -49)
+script = ExtResource("21_2oq4c")
+enemy_scene = ExtResource("22_xhd68")
+coin_scene = ExtResource("23_akjv8")
+
+[node name="RatSpawner" type="Node2D" parent="Monsters" unique_id=260997948]
+z_index = 10
+position = Vector2(221, 13)
+script = ExtResource("21_2oq4c")
+enemy_scene = ExtResource("22_xhd68")
+coin_scene = ExtResource("23_akjv8")
 
 [node name="DoorToMap4" type="Area2D" parent="." unique_id=1966067492]
 position = Vector2(265, -221)
@@ -2136,9 +2699,6 @@ shape = SubResource("RectangleShape2D_2xhxg")
 [node name="TalkIndicator" type="Sprite2D" parent="DoorToMap4" unique_id=1579268334]
 position = Vector2(-3, -40)
 texture = ExtResource("18_yhrm4")
-
-[node name="WoodDoor" parent="DoorToMap4" unique_id=1122919097 instance=ExtResource("22_wrnvj")]
-position = Vector2(1042, 163)
 
 [node name="DoorToMap2" type="Area2D" parent="." unique_id=19792171]
 position = Vector2(-22, -6)
@@ -2181,51 +2741,16 @@ position = Vector2(-1, -1)
 [node name="FromMap5" type="Marker2D" parent="SpawnPoints" unique_id=1565295234]
 position = Vector2(1015, -204)
 
+[node name="FromMap6" type="Marker2D" parent="SpawnPoints" unique_id=246397477]
+position = Vector2(968, 147)
+
 [node name="FromMap2" type="Marker2D" parent="SpawnPoints" unique_id=984394409]
 position = Vector2(-271, 206)
 
 [node name="CampFireSpawn" type="Marker2D" parent="SpawnPoints" unique_id=2131966653]
 position = Vector2(-134, 210)
 
-[node name="RatSpawner" type="Node2D" parent="." unique_id=260997948]
-position = Vector2(221, 13)
-script = ExtResource("21_2oq4c")
-enemy_scene = ExtResource("22_xhd68")
-coin_scene = ExtResource("23_akjv8")
-
-[node name="RatSpawner2" type="Node2D" parent="." unique_id=1442965189]
-position = Vector2(685, -49)
-script = ExtResource("21_2oq4c")
-enemy_scene = ExtResource("22_xhd68")
-coin_scene = ExtResource("23_akjv8")
-
-[node name="BatSpawner6" type="Node2D" parent="." unique_id=337764797]
-position = Vector2(849, -155)
-script = ExtResource("21_2oq4c")
-enemy_scene = ExtResource("15_1ti83")
-coin_scene = ExtResource("23_akjv8")
-
-[node name="BatSpawner7" type="Node2D" parent="." unique_id=1687977625]
-position = Vector2(539, -307)
-script = ExtResource("21_2oq4c")
-enemy_scene = ExtResource("15_1ti83")
-coin_scene = ExtResource("23_akjv8")
-
-[node name="BatSpawner8" type="Node2D" parent="." unique_id=696875116]
-position = Vector2(655, -458)
-script = ExtResource("21_2oq4c")
-enemy_scene = ExtResource("15_1ti83")
-coin_scene = ExtResource("23_akjv8")
-
-[node name="BatSpawner9" type="Node2D" parent="." unique_id=1010396063]
-position = Vector2(927, -460)
-script = ExtResource("21_2oq4c")
-enemy_scene = ExtResource("15_1ti83")
-coin_scene = ExtResource("23_akjv8")
-
-[node name="MushroomSpawner3" type="Node2D" parent="." unique_id=1330006530]
-position = Vector2(1228, -406)
-script = ExtResource("21_2oq4c")
-enemy_scene = ExtResource("24_xhd68")
-coin_scene = ExtResource("23_akjv8")
-coin_drop_count = 2
+[node name="WoodDoor" parent="." unique_id=1122919097 instance=ExtResource("22_wrnvj")]
+position = Vector2(1307, -58)
+target_scene_path = "uid://4o0b6040cas4"
+target_spawn_point_name = "FromMap3"

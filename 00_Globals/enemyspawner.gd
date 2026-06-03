@@ -8,6 +8,7 @@ extends Node2D
 @export var coin_drop_random_x: float = 12.0
 @export var coin_drop_y_offset: float = -6.0
 @export var set_flag_on_enemy_die: String = ""
+
 var current_enemy: Node = null
 var is_respawning: bool = false
 
@@ -72,6 +73,14 @@ func drop_coins(death_position: Vector2) -> void:
 
 	for i in range(coin_drop_count):
 		var coin: Node = coin_scene.instantiate()
+
+		if coin == null:
+			continue
+
+		# Quan trọng:
+		# Coin sinh ra từ quái thì bật chế độ rơi/văng.
+		if "is_drop_coin" in coin:
+			coin.set("is_drop_coin", true)
 
 		if coin is Node2D:
 			var random_x: float = randf_range(-coin_drop_random_x, coin_drop_random_x)

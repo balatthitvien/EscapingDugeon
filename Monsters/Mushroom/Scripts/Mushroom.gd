@@ -23,7 +23,7 @@ const STATE_DIE: int = 5
 
 @onready var left_point: Node2D = $PatrolPoints/LeftPoint
 @onready var right_point: Node2D = $PatrolPoints/RightPoint
-
+@onready var enemy_health_bar: Node = get_node_or_null("EnemyHealthBar")
 
 @export var max_hp: int = 5
 @export var move_speed: float = 35.0
@@ -77,9 +77,13 @@ var has_dealt_damage: bool = false
 var has_given_exp: bool = false
 
 func _ready() -> void:
+	add_to_group("enemy")
 	randomize()
 
 	hp = max_hp
+
+	if enemy_health_bar != null and enemy_health_bar.has_method("set_health"):
+		enemy_health_bar.set_health(hp, max_hp)
 
 	patrol_left_x = left_point.global_position.x
 	patrol_right_x = right_point.global_position.x
@@ -513,6 +517,10 @@ func start_hurt(my_token: int) -> void:
 func start_die(my_token: int) -> void:
 	give_exp_reward()
 	enemy_died.emit(global_position)
+
+	if enemy_health_bar != null:
+		enemy_health_bar.visible = false
+
 	if is_dead:
 		return
 
@@ -564,6 +572,8 @@ func take_damage(damage: int = 1) -> void:
 	hp = clamp(hp, 0, max_hp)
 
 	print("Mushroom HP: ", hp, "/", max_hp)
+	if enemy_health_bar != null and enemy_health_bar.has_method("show_damage_health"):
+		enemy_health_bar.show_damage_health(hp, max_hp)
 
 	if hp <= 0:
 		change_state(STATE_DIE, true)
@@ -953,3 +963,17 @@ func give_exp_reward() -> void:
 
 	if PlayerManager.player != null and PlayerManager.player.has_method("gain_exp"):
 		PlayerManager.player.gain_exp(exp_reward)
+func is_targeting_player() -> bool:
+	if is_dead:
+		return false
+
+	if player == null:
+		return false
+
+	if not is_instance_valid(player):
+		return false
+
+	if PlayerManager.player == null:
+		return false
+
+	return player == PlayerManager.player

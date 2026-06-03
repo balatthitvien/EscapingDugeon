@@ -32,6 +32,8 @@ const GRAVITY: float = 1000.0
 @export var max_health_units: int = 2
 @export var left_map_padding: float = 0.0
 @export var right_map_padding: float = 0.0
+@export var player_id: int = 1
+@export var coop_screen_margin_x: float = 32.0
 var can_control: bool = true
 var facing_direction: int = 1
 var direction_vector: Vector2 = Vector2.RIGHT
@@ -58,7 +60,12 @@ signal exp_changed(current_exp: int, exp_to_next: int, level: int)
 signal level_changed(level: int, max_health: int)
 signal potion_changed(potion_count: int)
 func _ready() -> void:
+	if !is_coop_mode() and player_id != 1:
+		queue_free()
+		return
+
 	call_deferred("setup_camera_and_audio_listener")
+
 
 	floor_snap_length = 8.0
 	floor_max_angle = deg_to_rad(50.0)
@@ -77,21 +84,29 @@ func _ready() -> void:
 
 	state_machine.Initialize(self)
 
-	PlayerManager.register_player(self)
+	add_to_group("players")
 
-	refresh_after_restore()
+	if !is_coop_mode() or player_id == 1:
+		PlayerManager.register_player(self)
+
+	call_deferred("refresh_after_restore")
+	call_deferred("refresh_after_restore_delayed")
 
 func setup_camera_and_audio_listener() -> void:
 	camera_2d = get_node_or_null("Camera2D") as Camera2D
 
 	if camera_2d != null:
-		camera_2d.make_current()
+		if is_coop_mode():
+			camera_2d.enabled = false
+		else:
+			camera_2d.enabled = true
+			camera_2d.make_current()
 	else:
 		push_warning("Player không tìm thấy Camera2D trong map này.")
 
 	if audio_listener_2d != null:
-		audio_listener_2d.make_current()
-		print("AudioListener2D đã make_current tại: ", audio_listener_2d.global_position)
+		if !is_coop_mode() or player_id == 1:
+			audio_listener_2d.make_current()
 	else:
 		push_warning("Player không tìm thấy AudioListener2D.")
 func _physics_process(delta: float) -> void:
@@ -113,12 +128,109 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	clamp_to_tilemap_bounds()
 	check_landing_sound()
-
 func apply_gravity(delta: float) -> void:
 	if !is_on_floor():
 		velocity.y += GRAVITY * delta
 
+func is_coop_mode() -> bool:
+	var game_mode := get_node_or_null("/root/GameMode")
 
+	if game_mode == null:
+		return false
+
+	return game_mode.is_two_players()
+
+
+func get_move_left_action() -> String:
+	if !is_coop_mode():
+		return "move_left"
+
+	if player_id == 1:
+		return "p1_move_left"
+
+	return "p2_move_left"
+
+
+func get_move_right_action() -> String:
+	if !is_coop_mode():
+		return "move_right"
+
+	if player_id == 1:
+		return "p1_move_right"
+
+	return "p2_move_right"
+
+
+func get_jump_action() -> String:
+	if !is_coop_mode():
+		return "jump"
+
+	if player_id == 1:
+		return "p1_jump"
+
+	return "p2_jump"
+
+
+func get_attack_action() -> String:
+	if !is_coop_mode():
+		return "attack"
+
+	if player_id == 1:
+		return "p1_attack"
+
+	return "p2_attack"
+
+
+func get_interact_action() -> String:
+	if !is_coop_mode():
+		return "interact"
+
+	if player_id == 1:
+		return "p1_interact"
+
+	return "p2_interact"
+
+
+func get_heal_action() -> String:
+	if !is_coop_mode():
+		return "use_potion"
+
+	if player_id == 1:
+		return "p1_heal"
+
+	return "p2_heal"
+
+
+func is_jump_just_pressed() -> bool:
+	if !can_do_action():
+		return false
+
+	return Input.is_action_just_pressed(get_jump_action())
+
+
+func is_attack_just_pressed() -> bool:
+	if !can_do_action():
+		return false
+
+	return Input.is_action_just_pressed(get_attack_action())
+func is_jump_event_pressed(event: InputEvent) -> bool:
+	if !can_do_action():
+		return false
+
+	return event.is_action_pressed(get_jump_action())
+
+
+func is_attack_event_pressed(event: InputEvent) -> bool:
+	if !can_do_action():
+		return false
+
+	return event.is_action_pressed(get_attack_action())
+
+func is_interact_just_pressed() -> bool:
+	if !can_do_action():
+		return false
+
+	return Input.is_action_just_pressed(get_interact_action())
 func input_movement() -> float:
 	if is_dead:
 		return 0.0
@@ -129,7 +241,7 @@ func input_movement() -> float:
 	if !can_control:
 		return 0.0
 
-	return Input.get_axis("move_left", "move_right")
+	return Input.get_axis(get_move_left_action(), get_move_right_action())
 
 func update_facing_direction(direction: float) -> void:
 	if is_dead:
@@ -336,20 +448,39 @@ func take_damage(amount: int = 1, attacker_position: Vector2 = Vector2.ZERO) -> 
 	if is_hurt:
 		return
 
-	var old_health: int = current_health_units
+	var stats_player := get_shared_stats_player()
 
-	current_health_units -= amount
-	current_health_units = clamp(current_health_units, 0, max_health_units)
+	# Nếu đang chơi 2 người và người bị đánh là Player2,
+	# thì trừ máu ở Player1 nhưng hiệu ứng hurt vẫn xảy ra trên Player2.
+	if stats_player != self:
+		stats_player.take_shared_damage_only(amount)
 
-	health_changed.emit(current_health_units, max_health_units, old_health)
+		if stats_player.current_health_units <= 0:
+			die_all_players(attacker_position)
+			return
+
+		start_hurt(attacker_position)
+		return
+
+	# Player1 hoặc chế độ 1 người.
+	take_shared_damage_only(amount)
 
 	if current_health_units <= 0:
-		die(attacker_position)
+		if is_coop_mode():
+			die_all_players(attacker_position)
+		else:
+			die(attacker_position)
 		return
 
 	start_hurt(attacker_position)
 
 func heal(amount: int = 1) -> void:
+	var stats_player := get_shared_stats_player()
+
+	if stats_player != self:
+		stats_player.heal(amount)
+		return
+
 	if is_dead:
 		return
 
@@ -360,11 +491,21 @@ func heal(amount: int = 1) -> void:
 
 	health_changed.emit(current_health_units, max_health_units, old_health)
 
-
 func add_coin(amount: int = 1) -> void:
+	var stats_player := get_shared_stats_player()
+
+	if stats_player != self:
+		stats_player.add_coin(amount)
+		return
+
 	coin_count += amount
 	coin_changed.emit(coin_count)
 	print("Coin: ", coin_count)
+func is_interact_event_pressed(event: InputEvent) -> bool:
+	if !can_do_action():
+		return false
+
+	return event.is_action_pressed(get_interact_action())
 func start_hurt(attacker_position: Vector2 = Vector2.ZERO) -> void:
 	if is_dead:
 		return
@@ -395,6 +536,11 @@ func start_hurt(attacker_position: Vector2 = Vector2.ZERO) -> void:
 
 	update_animation(hurt_animation_base, false)
 func gain_exp(amount: int) -> void:
+	var stats_player := get_shared_stats_player()
+
+	if stats_player != self:
+		stats_player.gain_exp(amount)
+		return
 	if is_dead:
 		return
 
@@ -452,12 +598,15 @@ func apply_weapon_upgrade_bonus() -> void:
 
 
 func get_attack_damage() -> int:
-	return 1 + weapon_bonus_attack
+	return 50
 func _exit_tree() -> void:
 	if PlayerManager.player == self:
 		PlayerManager.capture_runtime_stats_from_player(false)
 		PlayerManager.clear_player(self)
 func refresh_after_restore() -> void:
+	if !is_inside_tree():
+		return
+
 	is_dead = false
 	is_hurt = false
 	hurt_timer = 0.0
@@ -470,23 +619,55 @@ func refresh_after_restore() -> void:
 	apply_weapon_upgrade_bonus()
 	stop_hurt_box()
 
+	emit_all_stat_signals()
+
+	if animation_player != null:
+		update_animation("idle", false)
+func refresh_after_restore_delayed() -> void:
+	# Gọi lại nhiều lần để chắc chắn HUD đã kịp _ready() và connect signal.
+	await get_tree().process_frame
+	emit_all_stat_signals()
+
+	await get_tree().process_frame
+	emit_all_stat_signals()
+
+	await get_tree().create_timer(0.2).timeout
+	emit_all_stat_signals()
+
+	await get_tree().create_timer(0.5).timeout
+	emit_all_stat_signals()
+
+
+func emit_all_stat_signals() -> void:
+	if !is_inside_tree():
+		return
+
 	coin_changed.emit(coin_count)
 	potion_changed.emit(potion_count)
 	health_changed.emit(current_health_units, max_health_units, current_health_units)
 	exp_changed.emit(current_exp, exp_to_next, level)
-
-	if animation_player != null:
-		update_animation("idle", false)
+	level_changed.emit(level, max_health_units)
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("use_potion"):
+	if event.is_action_pressed(get_heal_action()):
 		use_health_potion()
 		get_viewport().set_input_as_handled()
 func add_potion(amount: int = 1) -> void:
+	var stats_player := get_shared_stats_player()
+
+	if stats_player != self:
+		stats_player.add_potion(amount)
+		return
+
 	potion_count += amount
 	potion_changed.emit(potion_count)
 
 
 func use_health_potion() -> void:
+	var stats_player := get_shared_stats_player()
+
+	if stats_player != self:
+		stats_player.use_health_potion()
+		return
 	if is_dead:
 		return
 
@@ -525,3 +706,46 @@ func start_potion_heal() -> void:
 		heal(1)
 
 	is_using_potion = false
+func get_shared_stats_player() -> Player:
+	if !is_coop_mode():
+		return self
+
+	if PlayerManager.player != null and PlayerManager.player is Player:
+		return PlayerManager.player as Player
+
+	return self
+
+
+func is_shared_stats_proxy() -> bool:
+	if !is_coop_mode():
+		return false
+
+	return get_shared_stats_player() != self
+func take_shared_damage_only(amount: int = 1) -> void:
+	var old_health: int = current_health_units
+
+	current_health_units -= amount
+	current_health_units = clamp(current_health_units, 0, max_health_units)
+
+	health_changed.emit(current_health_units, max_health_units, old_health)
+
+
+func die_all_players(attacker_position: Vector2 = Vector2.ZERO) -> void:
+	var players := get_tree().get_nodes_in_group("players")
+
+	if players.is_empty():
+		die(attacker_position)
+		return
+
+	for p in players:
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		if p is Player:
+			var target_player := p as Player
+
+			if !target_player.is_dead:
+				target_player.die(attacker_position)

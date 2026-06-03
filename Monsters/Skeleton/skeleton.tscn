@@ -8,6 +8,7 @@
 [ext_resource type="AudioStream" uid="uid://drch7pkdbexpo" path="res://Monsters/Skeleton/Sound/Skeleton - hurt.mp3" id="4_e14gd"]
 [ext_resource type="AudioStream" uid="uid://bpvibo4d002jh" path="res://Monsters/Skeleton/Sound/Skeleton -shield.mp3" id="5_klftv"]
 [ext_resource type="AudioStream" uid="uid://dyjqhstedsepo" path="res://Monsters/Skeleton/Sound/Skeleton - walk.mp3" id="6_0v5l0"]
+[ext_resource type="Script" uid="uid://h7uqioiqnx4s" path="res://00_Globals/EnemyHealthBar.gd" id="9_e14gd"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_uomsi"]
 radius = 14.0
@@ -345,12 +346,42 @@ radius = 12.0
 [node name="Skeleton" type="CharacterBody2D" unique_id=1197391335]
 collision_layer = 2
 script = ExtResource("1_gce77")
-max_hp = 1
-attack_damage = 2
+max_hp = 9
+attack_damage = 3
 exp_reward = 7
 patrol_speed = 45.0
+chase_speed = null
 attack_distance = 42.0
+attack_y_tolerance = null
+attack_cooldown_time = null
+attack_total_time = null
+hurt_time = null
+hurt_invincible_time = null
+knockback_force_x = null
+knockback_force_y = null
+shield_duration = null
 shield_cooldown_time = 1.4
+shield_chance_on_front_hit = null
+shield_chance_while_chasing = null
+shield_trigger_distance = null
+shield_decision_interval = null
+leash_padding = null
+chase_when_seen = null
+combat_memory_time = null
+counter_attack_after_hurt = null
+counter_attack_distance = null
+walk_max_volume_db = null
+walk_min_volume_db = null
+walk_full_volume_distance = null
+walk_max_hear_distance = null
+walk_pitch_min = null
+walk_pitch_max = null
+remove_after_die = null
+wall_turn_cooldown_time = null
+wall_push_back_distance = null
+wall_normal_min_x = null
+ignore_player_after_wall_time = null
+hurt_stun_cooldown_time = null
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1685279061]
 position = Vector2(5, -29)
@@ -425,3 +456,9 @@ position = Vector2(-98, -1)
 
 [node name="RightPoint" type="Marker2D" parent="PatrolPoints" unique_id=964309232]
 position = Vector2(110, 0)
+
+[node name="EnemyHealthBar" type="Node2D" parent="." unique_id=1216911548]
+position = Vector2(6, -61)
+script = ExtResource("9_e14gd")
+bar_size = Vector2(38, 4)
+bar_offset = Vector2(-16, -60)

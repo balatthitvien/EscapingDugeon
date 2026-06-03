@@ -49,6 +49,43 @@ extends CharacterBody2D
 @export var lost_player_grace_time: float = 1.5
 
 
+# =========================
+# PHASE SPEED
+# =========================
+# Khi boss xuống các mốc máu, tốc chạy và tốc đánh sẽ tăng.
+@export var speed_multiplier_above_75: float = 1.0
+@export var speed_multiplier_below_75: float = 1.3
+@export var speed_multiplier_below_50: float = 1.5
+@export var speed_multiplier_below_25: float = 1.8
+
+@export var attack_anim_multiplier_above_75: float = 1.0
+@export var attack_anim_multiplier_below_75: float = 1.15
+@export var attack_anim_multiplier_below_50: float = 1.35
+@export var attack_anim_multiplier_below_25: float = 1.6
+
+var base_move_speed: float = 50
+var base_chase_speed: float = 65
+var base_random_move_speed: float = 55
+var base_dash_speed: float = 690
+var current_phase_speed_multiplier: float = 1.0
+var current_phase_attack_anim_multiplier: float = 1.0
+
+
+# =========================
+# ATTACK FIX
+# =========================
+# Dùng thêm check khoảng cách thủ công để boss vẫn đánh trúng Player
+# kể cả khi Player đứng im sẵn trong vùng đánh.
+@export var manual_attack_check_enabled: bool = true
+@export var manual_attack_hit_distance_x: float = 58.0
+@export var manual_attack_hit_distance_y: float = 42.0
+@export var manual_attack_back_tolerance: float = 8.0
+@export var attack_only_hits_facing_direction: bool = true
+
+var is_attack_hurt_box_active: bool = false
+var has_attack_hit_player: bool = false
+
+
 # DASH
 @export var dash_speed: float = 690.0
 @export var dash_cooldown: float = 1
@@ -102,19 +139,25 @@ signal died
 func _ready() -> void:
 	use_normal_sprite()
 
+	base_move_speed = move_speed
+	base_chase_speed = chase_speed
+	base_random_move_speed = random_move_speed
+	base_dash_speed = dash_speed
+
 	current_health = max_health
+	update_health_phase()
 	health_changed.emit(current_health, max_health)
 
 	hit_box.Damaged.connect(_on_hit_box_damaged)
 
-	# Tắt hitbox đánh thường lúc đầu
 	attack_hurt_box.monitoring = false
+	attack_hurt_box.monitorable = false
 	attack_hurt_box_collision.disabled = true
 	attack_hurt_box.body_entered.connect(_on_attack_hurt_box_body_entered)
 	attack_hurt_box.area_entered.connect(_on_attack_hurt_box_area_entered)
 
-	# Tắt hitbox dash lúc đầu
 	dash_hurt_box.monitoring = false
+	dash_hurt_box.monitorable = false
 	dash_hurt_box_collision.disabled = true
 	dash_hurt_box.body_entered.connect(_on_dash_hurt_box_body_entered)
 	dash_hurt_box.area_entered.connect(_on_dash_hurt_box_area_entered)
@@ -134,6 +177,10 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	apply_gravity(delta)
+
+	if is_attack_hurt_box_active:
+		try_manual_attack_hit_player()
+
 	move_and_slide()
 	clamp_to_tilemap_bounds()
 
@@ -142,6 +189,62 @@ func apply_gravity(delta: float) -> void:
 	if !is_on_floor():
 		velocity.y += gravity * delta
 
+
+# =========================
+# HEALTH PHASE
+# =========================
+
+func get_health_ratio() -> float:
+	if max_health <= 0:
+		return 0.0
+
+	return float(current_health) / float(max_health)
+
+
+func update_health_phase() -> void:
+	var ratio := get_health_ratio()
+
+	if ratio <= 0.25:
+		current_phase_speed_multiplier = speed_multiplier_below_25
+		current_phase_attack_anim_multiplier = attack_anim_multiplier_below_25
+	elif ratio <= 0.5:
+		current_phase_speed_multiplier = speed_multiplier_below_50
+		current_phase_attack_anim_multiplier = attack_anim_multiplier_below_50
+	elif ratio <= 0.75:
+		current_phase_speed_multiplier = speed_multiplier_below_75
+		current_phase_attack_anim_multiplier = attack_anim_multiplier_below_75
+	else:
+		current_phase_speed_multiplier = speed_multiplier_above_75
+		current_phase_attack_anim_multiplier = attack_anim_multiplier_above_75
+
+	move_speed = base_move_speed * current_phase_speed_multiplier
+	chase_speed = base_chase_speed * current_phase_speed_multiplier
+	random_move_speed = base_random_move_speed * current_phase_speed_multiplier
+	dash_speed = base_dash_speed * current_phase_speed_multiplier
+
+	print(
+		"Boss phase update | HP ratio: ",
+		ratio,
+		" | Speed x",
+		current_phase_speed_multiplier,
+		" | Attack anim x",
+		current_phase_attack_anim_multiplier
+	)
+
+
+func get_animation_speed_for_base_anim(base_anim_name: String) -> float:
+	if base_anim_name.contains("attack"):
+		return current_phase_attack_anim_multiplier
+
+	if base_anim_name.contains("dash"):
+		return current_phase_speed_multiplier
+
+	return 1.0
+
+
+# =========================
+# PATROL
+# =========================
 
 func setup_patrol_points() -> void:
 	point_positions.clear()
@@ -193,6 +296,9 @@ func update_direction_by_target() -> void:
 
 
 func update_direction_to_player() -> void:
+	if player == null:
+		player = PlayerManager.player
+
 	if player == null:
 		return
 
@@ -247,11 +353,13 @@ func can_use_dash() -> bool:
 		return false
 
 	if player == null:
+		player = PlayerManager.player
+
+	if player == null:
 		return false
 
 	var unlock_health := float(max_health) * dash_unlock_health_ratio
 
-	# Máu còn lớn hơn 50% thì chưa được dash
 	if float(current_health) > unlock_health:
 		return false
 
@@ -284,6 +392,8 @@ func update_animation(
 		push_warning("Enemy không tìm thấy animation: " + anim_name)
 		return
 
+	animation_player.speed_scale = get_animation_speed_for_base_anim(base_anim_name)
+
 	var old_position: float = 0.0
 	var same_base_animation := current_base_animation == base_anim_name
 
@@ -311,6 +421,9 @@ func update_animation(
 
 
 func get_distance_to_player() -> float:
+	if player == null:
+		player = PlayerManager.player
+
 	if player == null:
 		return 999999.0
 
@@ -378,6 +491,8 @@ func take_damage(amount: int) -> void:
 
 	print("Boss HP: ", current_health, "/", max_health)
 
+	update_health_phase()
+
 	if can_use_dash():
 		print("Boss đã xuống nửa máu, dash đã được mở khóa")
 
@@ -388,6 +503,9 @@ func take_damage(amount: int) -> void:
 
 
 func die() -> void:
+	if animation_player != null:
+		animation_player.speed_scale = 1.0
+
 	died.emit()
 	queue_free()
 
@@ -403,10 +521,17 @@ func _on_hit_box_damaged(damage: int) -> void:
 func start_attack_hurt_box() -> void:
 	print("BOSS START ATTACK HURT BOX")
 
+	is_attack_hurt_box_active = true
+	has_attack_hit_player = false
+
 	attack_hurt_box_collision.disabled = false
 	attack_hurt_box.monitoring = true
 	attack_hurt_box.monitorable = true
 
+	# Check ngay khi animation bật hitbox.
+	try_manual_attack_hit_player()
+
+	await get_tree().physics_frame
 	await get_tree().physics_frame
 
 	print("Attack bodies overlap: ", attack_hurt_box.get_overlapping_bodies().size())
@@ -418,11 +543,16 @@ func start_attack_hurt_box() -> void:
 	for area in attack_hurt_box.get_overlapping_areas():
 		kill_player_from_attack(area)
 
+	# Check thêm lần nữa sau khi physics cập nhật overlap.
+	try_manual_attack_hit_player()
+
 
 func stop_attack_hurt_box() -> void:
 	print("BOSS STOP ATTACK HURT BOX")
 
+	is_attack_hurt_box_active = false
 	attack_hurt_box.monitoring = false
+	attack_hurt_box.monitorable = false
 	attack_hurt_box_collision.disabled = true
 
 
@@ -437,10 +567,74 @@ func _on_attack_hurt_box_area_entered(area: Area2D) -> void:
 
 
 func kill_player_from_attack(target: Node) -> void:
+	if !is_attack_hurt_box_active:
+		return
+
 	if attack_hurt_box_collision.disabled:
 		return
 
-	kill_player(target)
+	if has_attack_hit_player:
+		return
+
+	var target_player := find_player_from_node(target)
+
+	if target_player == null:
+		print("Không tìm thấy Player từ node: ", target.name)
+		return
+
+	has_attack_hit_player = true
+	kill_player(target_player)
+
+
+func try_manual_attack_hit_player() -> void:
+	if !manual_attack_check_enabled:
+		return
+
+	if !is_attack_hurt_box_active:
+		return
+
+	if has_attack_hit_player:
+		return
+
+	if player == null:
+		player = PlayerManager.player
+
+	if player == null:
+		return
+
+	if !is_instance_valid(player):
+		return
+
+	if !is_player_inside_manual_attack_range():
+		return
+
+	print("Boss đánh trúng Player bằng manual attack check")
+	has_attack_hit_player = true
+	kill_player(player)
+
+
+func is_player_inside_manual_attack_range() -> bool:
+	if player == null:
+		return false
+
+	var delta_to_player: Vector2 = player.global_position - global_position
+	var dx: float = delta_to_player.x
+	var dy: float = abs(delta_to_player.y)
+
+	if dy > manual_attack_hit_distance_y:
+		return false
+
+	if abs(dx) > manual_attack_hit_distance_x:
+		return false
+
+	if attack_only_hits_facing_direction:
+		if facing_direction > 0 and dx < -manual_attack_back_tolerance:
+			return false
+
+		if facing_direction < 0 and dx > manual_attack_back_tolerance:
+			return false
+
+	return true
 
 
 # =========================
@@ -470,6 +664,7 @@ func stop_dash_hurt_box() -> void:
 	print("BOSS STOP DASH HURT BOX")
 
 	dash_hurt_box.monitoring = false
+	dash_hurt_box.monitorable = false
 	dash_hurt_box_collision.disabled = true
 
 
@@ -537,6 +732,8 @@ func play_attack_sound() -> void:
 	attack_sound.pitch_scale = randf_range(attack_pitch_min, attack_pitch_max)
 	attack_sound.volume_db = attack_volume_db
 	attack_sound.play()
+
+
 func play_dash_sound() -> void:
 	if dash_sound == null:
 		return
@@ -545,6 +742,7 @@ func play_dash_sound() -> void:
 	dash_sound.pitch_scale = randf_range(dash_pitch_min, dash_pitch_max)
 	dash_sound.volume_db = dash_volume_db
 	dash_sound.play()
+
 
 func play_footstep_sound() -> void:
 	if !can_play_footstep_sound:

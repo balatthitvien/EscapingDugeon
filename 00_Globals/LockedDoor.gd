@@ -11,7 +11,7 @@ extends Area2D
 
 @export var fade_out_time: float = 0.7
 @export var fade_in_time: float = 0.7
-
+@export var message_font_size: int = 16
 var player_in_range: bool = false
 var player: Player = null
 var is_changing_scene: bool = false
@@ -157,7 +157,7 @@ func create_message_ui() -> void:
 	message_label.offset_top = -110
 	message_label.offset_bottom = -60
 
-	message_label.add_theme_font_size_override("font_size", 24)
+	message_label.add_theme_font_size_override("font_size", message_font_size)
 
 
 func show_bottom_message(text: String) -> void:

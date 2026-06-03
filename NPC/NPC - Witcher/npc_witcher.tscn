@@ -118,3 +118,6 @@ shape = SubResource("CapsuleShape2D_kdpkd")
 [node name="TalkIndicator" type="Sprite2D" parent="." unique_id=878327838]
 position = Vector2(0, -21)
 texture = ExtResource("2_6thxb")
+
+[node name="TalkHintPoint" type="Marker2D" parent="." unique_id=1122983865]
+position = Vector2(-1, -15)

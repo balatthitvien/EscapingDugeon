@@ -99,3 +99,6 @@ debug_color = Color(3.7301331e-06, 0.6469361, 0.2323677, 0.41960785)
 [node name="TalkIndicator" type="Sprite2D" parent="." unique_id=66028225]
 position = Vector2(-2, -47)
 texture = ExtResource("4_hn3ya")
+
+[node name="TalkHintPoint" type="Marker2D" parent="." unique_id=1111904246]
+position = Vector2(0, -42)

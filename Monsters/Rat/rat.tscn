@@ -7,6 +7,7 @@
 [ext_resource type="AudioStream" uid="uid://dknpjmak53ase" path="res://Monsters/Rat/Sounds/rat and bat-attack.mp3" id="3_gdw54"]
 [ext_resource type="AudioStream" uid="uid://dldq0buda06we" path="res://Monsters/Rat/Sounds/rat-die.mp3" id="4_wd8k4"]
 [ext_resource type="AudioStream" uid="uid://b5tfvgycgpcqq" path="res://Monsters/Rat/Sounds/rat - hurt.mp3" id="5_5okby"]
+[ext_resource type="Script" uid="uid://h7uqioiqnx4s" path="res://00_Globals/EnemyHealthBar.gd" id="8_gdw54"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hitws"]
 
@@ -330,7 +331,6 @@ radius = 5.0
 collision_layer = 4
 script = ExtResource("1_egnf6")
 max_health = 4
-exp_reward = 30
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=782955869]
 position = Vector2(0, -7)
@@ -392,7 +392,11 @@ debug_color = Color(0.97044796, 0.06032324, 0.41451028, 0.41960785)
 position = Vector2(-2, 0)
 
 [node name="LeftPoint" type="Marker2D" parent="PatrolPoints" unique_id=1843331742]
-position = Vector2(-52, -1)
+position = Vector2(-77, -1)
 
 [node name="RightPoint" type="Marker2D" parent="PatrolPoints" unique_id=304856876]
-position = Vector2(53, -1)
+position = Vector2(74, -1)
+
+[node name="EnemyHealthBar" type="Node2D" parent="." unique_id=1261313675]
+position = Vector2(2, -17)
+script = ExtResource("8_gdw54")

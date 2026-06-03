@@ -27,6 +27,7 @@ enum RatState {
 @onready var die_sound: AudioStreamPlayer2D = $Audio/Die
 @onready var hurt_sound: AudioStreamPlayer2D = $Audio/Hurt
 
+@onready var enemy_health_bar: Node = get_node_or_null("EnemyHealthBar")
 
 @export var max_health: int = 3
 @export var move_speed: float = 55.0
@@ -95,10 +96,13 @@ var combat_memory_timer: float = 0.0
 
 var has_given_exp: bool = false
 func _ready() -> void:
+	
+	add_to_group("enemy")
 	randomize()
 
 	current_health = max_health
-
+	if enemy_health_bar != null and enemy_health_bar.has_method("set_health"):
+		enemy_health_bar.set_health(current_health, max_health)
 	setup_patrol_points()
 
 	attack_hurt_box.monitoring = false
@@ -410,6 +414,9 @@ func take_damage(amount: int) -> void:
 	current_health = clamp(current_health, 0, max_health)
 
 	print("Rat HP: ", current_health, "/", max_health)
+
+	if enemy_health_bar != null and enemy_health_bar.has_method("show_damage_health"):
+		enemy_health_bar.show_damage_health(current_health, max_health)
 
 	if current_health <= 0:
 		current_state = RatState.DIE
@@ -958,3 +965,17 @@ func give_exp_reward() -> void:
 
 	if PlayerManager.player != null and PlayerManager.player.has_method("gain_exp"):
 		PlayerManager.player.gain_exp(exp_reward)
+func is_targeting_player() -> bool:
+	if is_dead:
+		return false
+
+	if player == null:
+		return false
+
+	if not is_instance_valid(player):
+		return false
+
+	if PlayerManager.player == null:
+		return false
+
+	return player == PlayerManager.player

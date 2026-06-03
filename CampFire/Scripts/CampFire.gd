@@ -8,22 +8,42 @@ extends CharacterBody2D
 
 @export var campfire_id: String = "campfire_map_1"
 
-# Spawn point để player hồi sinh tại campfire này.
-# Trong map, bạn tạo node:
-# SpawnPoints
-# └── CampFireSpawn
 @export var respawn_spawn_point_name: String = "CampFireSpawn"
 
-# Map trại chính.
 @export_file("*.tscn") var camp_scene_path: String = "res://level/testlevel/map_1/map_1.tscn"
 @export var camp_spawn_point_name: String = "FromCampFire"
 
 @export var fade_out_time: float = 0.7
 @export var fade_in_time: float = 0.7
 
+# =========================
+# CO-OP CAMPFIRE
+# =========================
+@export var coop_required_player_distance: float = 150.0
+@export var coop_required_message: String = "2 người đứng gần nhau mới có thể sử dụng."
+
+# Player 1 dùng E.
+@export var p1_campfire_action: StringName = &"p1_interact"
+
+# Nếu bạn muốn Player2 dùng chuột phải thì để p2_interact.
+# Nếu muốn Player2 dùng Ctrl, tạo action p2_campfire gán Ctrl rồi đổi dòng này thành &"p2_campfire".
+@export var p2_campfire_action: StringName = &"p2_interact"
+
+# =========================
+# FIRST CAMPFIRE HINT
+# =========================
+@export var show_first_hint_only_in_map_1: bool = true
+@export var map_1_scene_path: String = "res://level/testlevel/map_1/map_1.tscn"
+@export var map_1_campfire_hint_flag: String = "has_shown_map_1_campfire_hint"
+
+@export var single_player_hint_text: String = "Ấn E để sử dụng lửa trại"
+@export var two_player_hint_text: String = "P1: Ấn E để sử dụng lửa trại\nP2: Chuột phải để sử dụng lửa trại"
+
 var player_near: bool = false
 var player: Player = null
 var ui_open: bool = false
+
+var players_near: Dictionary = {}
 
 var ui_layer: CanvasLayer
 var root: Control
@@ -33,6 +53,10 @@ var message_label: Label
 var confirm_button: Button
 var cancel_button: Button
 var tween: Tween = null
+
+var hint_layer: CanvasLayer = null
+var hint_label: Label = null
+var hint_tween: Tween = null
 
 
 func _ready() -> void:
@@ -60,17 +84,212 @@ func _ready() -> void:
 		push_warning(name + " thiếu InteractionArea.")
 
 	create_ui()
+	create_first_hint_ui()
 
 
-func _process(_delta: float) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	if ui_open:
 		return
 
-	if not player_near:
+	if players_near.is_empty():
 		return
 
-	if Input.is_action_just_pressed("interact"):
-		open_campfire_menu()
+	var action_player := get_player_pressed_campfire_action(event)
+
+	if action_player == null:
+		return
+
+	get_viewport().set_input_as_handled()
+
+	if !can_use_campfire_as_team():
+		show_need_teammate_message()
+		return
+
+	player = action_player
+	open_campfire_menu()
+
+
+func is_two_player_mode() -> bool:
+	var game_mode := get_node_or_null("/root/GameMode")
+
+	if game_mode == null:
+		return false
+
+	return game_mode.is_two_players()
+
+
+func get_player_pressed_campfire_action(event: InputEvent) -> Player:
+	for key in players_near.keys():
+		var p: Player = players_near[key]
+
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		var action_name: StringName = get_campfire_action_for_player(p)
+
+		if event.is_action_pressed(action_name):
+			return p
+
+	return null
+
+
+func get_campfire_action_for_player(target_player: Player) -> StringName:
+	if !is_two_player_mode():
+		return &"interact"
+
+	var id_value: int = int(target_player.get("player_id"))
+
+	if id_value == 1:
+		return p1_campfire_action
+
+	return p2_campfire_action
+
+
+func can_use_campfire_as_team() -> bool:
+	if !is_two_player_mode():
+		return true
+
+	var p1 := get_near_player_by_id(1)
+	var p2 := get_near_player_by_id(2)
+
+	if p1 == null or p2 == null:
+		return false
+
+	if p1.is_dead or p2.is_dead:
+		return false
+
+	var distance: float = p1.global_position.distance_to(p2.global_position)
+
+	if distance > coop_required_player_distance:
+		return false
+
+	return true
+
+
+func get_near_player_by_id(id_value: int) -> Player:
+	for key in players_near.keys():
+		var p: Player = players_near[key]
+
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		if int(p.get("player_id")) == id_value:
+			return p
+
+	return null
+
+
+func show_need_teammate_message() -> void:
+	if get_node_or_null("/root/CoopRules") != null:
+		CoopRules.show_team_required_message(coop_required_message)
+		return
+
+	show_local_message(coop_required_message)
+
+
+func show_local_message(text_value: String) -> void:
+	if hint_label == null:
+		return
+
+	if hint_tween != null:
+		hint_tween.kill()
+
+	hint_label.text = text_value
+	hint_label.visible = true
+	hint_label.modulate.a = 0.0
+
+	hint_tween = create_tween()
+	hint_tween.tween_property(hint_label, "modulate:a", 1.0, 0.25)
+	hint_tween.tween_interval(2.0)
+	hint_tween.tween_property(hint_label, "modulate:a", 0.0, 0.35)
+
+	await hint_tween.finished
+
+	if hint_label != null:
+		hint_label.visible = false
+
+
+func create_first_hint_ui() -> void:
+	hint_layer = CanvasLayer.new()
+	hint_layer.name = "CampfireFirstHintUI"
+	hint_layer.layer = 1200
+	add_child(hint_layer)
+
+	hint_label = Label.new()
+	hint_label.name = "CampfireFirstHintLabel"
+	hint_layer.add_child(hint_label)
+
+	hint_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	hint_label.offset_left = -190
+	hint_label.offset_right = 190
+	hint_label.offset_top = 36
+	hint_label.offset_bottom = 92
+
+	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hint_label.add_theme_font_size_override("font_size", 10)
+	hint_label.add_theme_color_override("font_color", Color.WHITE)
+	hint_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	hint_label.add_theme_constant_override("outline_size", 2)
+
+	hint_label.visible = false
+	hint_label.modulate.a = 0.0
+	hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+func try_show_first_campfire_hint() -> void:
+	if !should_show_first_campfire_hint():
+		return
+
+	LevelManager.set_game_flag(map_1_campfire_hint_flag, true)
+
+	if is_two_player_mode():
+		show_first_campfire_hint(two_player_hint_text)
+	else:
+		show_first_campfire_hint(single_player_hint_text)
+
+
+func should_show_first_campfire_hint() -> bool:
+	if LevelManager.get_game_flag(map_1_campfire_hint_flag):
+		return false
+
+	if !show_first_hint_only_in_map_1:
+		return true
+
+	if get_tree().current_scene == null:
+		return false
+
+	var current_scene_path: String = get_tree().current_scene.scene_file_path
+
+	return current_scene_path == map_1_scene_path
+
+
+func show_first_campfire_hint(text_value: String) -> void:
+	if hint_label == null:
+		return
+
+	if hint_tween != null:
+		hint_tween.kill()
+
+	hint_label.text = text_value
+	hint_label.visible = true
+	hint_label.modulate.a = 0.0
+
+	hint_tween = create_tween()
+	hint_tween.tween_property(hint_label, "modulate:a", 1.0, 0.35)
+	hint_tween.tween_interval(4.0)
+	hint_tween.tween_property(hint_label, "modulate:a", 0.0, 0.45)
+
+	await hint_tween.finished
+
+	if hint_label != null:
+		hint_label.visible = false
 
 
 func create_ui() -> void:
@@ -103,7 +322,6 @@ func create_ui() -> void:
 	panel.name = "Panel"
 	root.add_child(panel)
 
-	# Nhỏ hơn bản cũ rất nhiều
 	panel.size = Vector2(240, 88)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -165,6 +383,7 @@ func create_ui() -> void:
 
 	center_panel()
 
+
 func center_panel() -> void:
 	if panel == null:
 		return
@@ -183,8 +402,7 @@ func open_campfire_menu() -> void:
 
 	ui_open = true
 
-	if player != null:
-		player.set_control_enabled(false)
+	set_all_players_control_enabled(false)
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
@@ -192,6 +410,8 @@ func open_campfire_menu() -> void:
 
 	root.visible = true
 	root.modulate.a = 0.0
+
+	cancel_button.visible = true
 
 	if LevelManager.has_saved_campfire(campfire_id):
 		title_label.text = "LỬA TRẠI"
@@ -223,10 +443,31 @@ func close_campfire_menu() -> void:
 	root.visible = false
 	ui_open = false
 
-	if player != null:
-		player.set_control_enabled(true)
+	set_all_players_control_enabled(true)
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+
+
+func set_all_players_control_enabled(state: bool) -> void:
+	if is_two_player_mode():
+		var players := get_tree().get_nodes_in_group("players")
+
+		for p in players:
+			if p == null:
+				continue
+
+			if !is_instance_valid(p):
+				continue
+
+			if p.has_method("set_control_enabled"):
+				p.set_control_enabled(state)
+
+		return
+
+	if player != null:
+		player.set_control_enabled(state)
+	elif PlayerManager.player != null and PlayerManager.player.has_method("set_control_enabled"):
+		PlayerManager.player.set_control_enabled(state)
 
 
 func _on_confirm_pressed() -> void:
@@ -321,11 +562,14 @@ func try_set_player_near(target: Node) -> void:
 	if detected_player == null:
 		return
 
-	player_near = true
+	players_near[detected_player.get_instance_id()] = detected_player
+	player_near = !players_near.is_empty()
 	player = detected_player
 
 	if talk_indicator != null:
-		talk_indicator.visible = true
+		talk_indicator.visible = player_near
+
+	try_show_first_campfire_hint()
 
 
 func try_remove_player_near(target: Node) -> void:
@@ -334,14 +578,28 @@ func try_remove_player_near(target: Node) -> void:
 	if detected_player == null:
 		return
 
-	if detected_player != player:
-		return
+	var id := detected_player.get_instance_id()
 
-	player_near = false
-	player = null
+	if players_near.has(id):
+		players_near.erase(id)
+
+	player_near = !players_near.is_empty()
+
+	if player == detected_player:
+		player = get_any_near_player()
 
 	if talk_indicator != null:
-		talk_indicator.visible = false
+		talk_indicator.visible = player_near
+
+
+func get_any_near_player() -> Player:
+	for key in players_near.keys():
+		var p: Player = players_near[key]
+
+		if p != null and is_instance_valid(p):
+			return p
+
+	return null
 
 
 func find_player_from_node(node: Node) -> Player:
@@ -349,6 +607,9 @@ func find_player_from_node(node: Node) -> Player:
 
 	while current != null:
 		if current is Player:
+			return current as Player
+
+		if current.is_in_group("players"):
 			return current as Player
 
 		if current.is_in_group("player"):
@@ -360,10 +621,10 @@ func find_player_from_node(node: Node) -> Player:
 		if current.name == "Player":
 			return current as Player
 
-		current = current.get_parent()
+		if current.name == "Player2":
+			return current as Player
 
-	if PlayerManager.player != null and PlayerManager.player is Player:
-		return PlayerManager.player as Player
+		current = current.get_parent()
 
 	return null
 

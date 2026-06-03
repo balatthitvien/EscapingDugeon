@@ -18,9 +18,14 @@ var is_active: bool = false
 var is_typing: bool = false
 var current_full_text: String = ""
 var blink_tween: Tween
+var skip_label: Label = null
+var is_mouse_over_skip: bool = false
+
+var previous_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_VISIBLE
 
 
 func _ready() -> void:
+	layer = 2000
 	visible = false
 	setup_layout()
 
@@ -69,12 +74,12 @@ func setup_layout() -> void:
 	dialog_text.add_theme_font_size_override("normal_font_size", 14)
 	dialog_text.add_theme_color_override("default_color", Color.WHITE)
 
-	# Dòng nhắc ấn phím
+	# Dòng hướng dẫn
 	space_text.position = Vector2(65, 52)
 	space_text.size = Vector2(290, 16)
 	space_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	space_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	space_text.text = "Ấn Space"
+	space_text.text = "Bấm chuột trái"
 
 	space_text.add_theme_font_override("font", PIXEL_FONT)
 	space_text.add_theme_font_size_override("font_size", 8)
@@ -82,17 +87,48 @@ func setup_layout() -> void:
 	space_text.add_theme_color_override("font_outline_color", Color.BLACK)
 	space_text.add_theme_constant_override("outline_size", 1)
 
+	create_skip_button()
 
+
+func create_skip_button() -> void:
+	if skip_label != null:
+		return
+
+	skip_label = Label.new()
+	skip_label.name = "SkipLabel"
+	skip_label.text = "Skip"
+	panel.add_child(skip_label)
+
+	skip_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	skip_label.offset_left = -55
+	skip_label.offset_right = -8
+	skip_label.offset_top = 3
+	skip_label.offset_bottom = 22
+
+	skip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	skip_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	skip_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	skip_label.add_theme_font_override("font", PIXEL_FONT)
+	skip_label.add_theme_font_size_override("font_size", 11)
+	skip_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
 func start_story(story_lines: Array) -> void:
 	lines.clear()
 
-	# Quan trọng: giữ nguyên dictionary, không ép str()
 	for line in story_lines:
 		lines.append(line)
 
 	current_index = 0
 	is_active = true
 	visible = true
+
+	# Trả lại chuột cho người chơi khi vào hội thoại
+	previous_mouse_mode = Input.mouse_mode
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+	if skip_label != null:
+		skip_label.visible = true
 
 	show_current_line()
 
@@ -135,7 +171,7 @@ func type_text(text_to_show: String) -> void:
 
 	dialog_text.text = text_to_show
 	is_typing = false
-	space_text.text = "Ấn Space"
+	space_text.text = "Bấm chuột trái"
 	space_text.visible = true
 	start_space_blink()
 
@@ -160,30 +196,62 @@ func stop_space_blink() -> void:
 	space_text.modulate.a = 1.0
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if !is_active:
 		return
 
-	if event.is_action_pressed("ui_accept"):
-		if is_typing:
-			is_typing = false
-			dialog_text.text = current_full_text
-			space_text.text = "Ấn Space"
-			space_text.visible = true
-			start_space_blink()
-		else:
-			stop_space_blink()
-			current_index += 1
-			show_current_line()
+	if event is InputEventMouseMotion:
+		update_skip_hover(event.position)
+		return
 
-		get_viewport().set_input_as_handled()
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			if is_mouse_on_skip(event.position):
+				finish_story()
+				get_viewport().set_input_as_handled()
+				return
+
+			advance_dialog()
+			get_viewport().set_input_as_handled()
+			return
+func advance_dialog() -> void:
+	if !is_active:
+		return
+
+	if is_typing:
+		is_typing = false
+		dialog_text.text = current_full_text
+		space_text.text = "Bấm chuột trái"
+		space_text.visible = true
+		start_space_blink()
+	else:
+		stop_space_blink()
+		current_index += 1
+		show_current_line()
+
+
+func _on_skip_button_pressed() -> void:
+	if !is_active:
+		return
+
+	finish_story()
 
 
 func finish_story() -> void:
 	stop_space_blink()
+
+	is_typing = false
 	is_active = false
 	visible = false
+
 	portrait.texture = null
+
+	if skip_label != null:
+		skip_label.visible = false
+
+	# Khôi phục lại chế độ chuột trước khi vào hội thoại
+	Input.mouse_mode = previous_mouse_mode
+
 	story_finished.emit()
 
 
@@ -191,3 +259,25 @@ func strip_bbcode(text: String) -> String:
 	var regex := RegEx.new()
 	regex.compile("\\[.*?\\]")
 	return regex.sub(text, "", true)
+func update_skip_hover(mouse_position: Vector2) -> void:
+	if skip_label == null:
+		return
+
+	var hovering: bool = is_mouse_on_skip(mouse_position)
+
+	if hovering == is_mouse_over_skip:
+		return
+
+	is_mouse_over_skip = hovering
+
+	if is_mouse_over_skip:
+		skip_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
+	else:
+		skip_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
+
+
+func is_mouse_on_skip(mouse_position: Vector2) -> bool:
+	if skip_label == null:
+		return false
+
+	return skip_label.get_global_rect().has_point(mouse_position)

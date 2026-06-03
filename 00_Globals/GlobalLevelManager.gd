@@ -18,6 +18,7 @@ var saved_campfire_id: String = ""
 var saved_respawn_scene_path: String = ""
 var saved_respawn_spawn_point_name: String = ""
 var map_transition_locked_until_msec: int = 0
+
 func change_tilemap_bounds(bounds: Array[Vector2]) -> void:
 	current_tilemap_bounds = bounds
 	tilemap_bounds_changed.emit(bounds)

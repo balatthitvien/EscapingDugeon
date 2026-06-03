@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://dqcr3e0jm0y5s" path="res://Enemy/vision_area.tscn" id="4_y3xfr"]
 [ext_resource type="AudioStream" uid="uid://dldq0buda06we" path="res://Monsters/Rat/Sounds/rat-die.mp3" id="5_v2tg7"]
 [ext_resource type="AudioStream" uid="uid://b761j80vi00bp" path="res://Monsters/Mimic/mimic-open.mp3" id="7_rq2md"]
+[ext_resource type="Script" uid="uid://h7uqioiqnx4s" path="res://00_Globals/EnemyHealthBar.gd" id="11_v2tg7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_rq2md"]
 size = Vector2(37, 20)
@@ -359,9 +360,9 @@ radius = 22.022715
 [node name="Mimic" type="CharacterBody2D" unique_id=1104140634]
 collision_layer = 4
 script = ExtResource("1_j5gty")
-max_health = 10
-damage = 5
-exp_reward = 5
+max_health = 9
+damage = 3
+exp_reward = 4
 patrol_speed = 65.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2141406207]
@@ -422,7 +423,6 @@ position = Vector2(-0.5, 1)
 shape = SubResource("RectangleShape2D_j5gty")
 
 [node name="VisionArea" parent="." unique_id=349694582 instance=ExtResource("4_y3xfr")]
-visible = false
 monitorable = true
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="VisionArea" unique_id=1217939099]
@@ -448,3 +448,9 @@ position = Vector2(-113, 18)
 
 [node name="RightPoint" type="Marker2D" parent="PatrolPoints" unique_id=1310632214]
 position = Vector2(138, 18)
+
+[node name="EnemyHealthBar" type="Node2D" parent="." unique_id=757655742]
+position = Vector2(6, -61)
+script = ExtResource("11_v2tg7")
+bar_size = Vector2(40, 4)
+bar_offset = Vector2(-16, -24)

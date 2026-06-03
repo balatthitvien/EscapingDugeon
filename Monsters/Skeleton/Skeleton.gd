@@ -28,7 +28,7 @@ enum SkeletonState {
 
 @onready var left_point: Node2D = $PatrolPoints/LeftPoint
 @onready var right_point: Node2D = $PatrolPoints/RightPoint
-
+@onready var enemy_health_bar: Node = get_node_or_null("EnemyHealthBar")
 const GRAVITY: float = 1000.0
 
 @export var max_hp: int = 6
@@ -73,6 +73,7 @@ const GRAVITY: float = 1000.0
 @export var wall_push_back_distance: float = 4.0
 @export var wall_normal_min_x: float = 0.4
 @export var ignore_player_after_wall_time: float = 1.0
+@export var hurt_stun_cooldown_time: float = 3.0
 var current_state: SkeletonState = SkeletonState.IDLE
 var hp: int = 0
 var facing_direction: int = 1
@@ -101,11 +102,14 @@ var attack_base_scale: Vector2 = Vector2.ONE
 
 var wall_turn_cooldown_timer: float = 0.0
 var ignore_player_after_wall_timer: float = 0.0
+var hurt_stun_cooldown_timer: float = 0.0
 func _ready() -> void:
+	add_to_group("enemy")
 	randomize()
 
 	hp = max_hp
-
+	if enemy_health_bar != null and enemy_health_bar.has_method("set_health"):
+		enemy_health_bar.set_health(hp, max_hp)
 	patrol_left_x = left_point.global_position.x
 	patrol_right_x = right_point.global_position.x
 
@@ -204,7 +208,10 @@ func update_timers(delta: float) -> void:
 
 	if combat_memory_timer > 0.0:
 		combat_memory_timer -= delta
-
+	if hurt_stun_cooldown_timer > 0.0:
+		hurt_stun_cooldown_timer -= delta
+	if hurt_stun_cooldown_timer < 0.0:
+		hurt_stun_cooldown_timer = 0.0
 
 
 
@@ -696,6 +703,10 @@ func block_attack(attacker_position: Vector2) -> void:
 
 func take_damage(damage: int, attacker_position: Vector2) -> void:
 	hp -= damage
+	hp = clamp(hp, 0, max_hp)
+
+	if enemy_health_bar != null and enemy_health_bar.has_method("show_damage_health"):
+		enemy_health_bar.show_damage_health(hp, max_hp)
 
 	if hp <= 0:
 		change_state(SkeletonState.DIE)
@@ -706,7 +717,15 @@ func take_damage(damage: int, attacker_position: Vector2) -> void:
 			set_facing_direction(-1)
 		else:
 			set_facing_direction(1)
+	var can_apply_stun: bool = hurt_stun_cooldown_timer <= 0.0
 
+	if not can_apply_stun:
+		print("Skeleton nhận damage nhưng không bị choáng do đang hồi stun")
+		return
+
+	hurt_stun_cooldown_timer = hurt_stun_cooldown_time
+
+	if attacker_position != Vector2.ZERO:
 		var knockback_direction: float = 1.0
 
 		if global_position.x < attacker_position.x:
@@ -722,7 +741,8 @@ func take_damage(damage: int, attacker_position: Vector2) -> void:
 
 func start_die(my_token: int) -> void:
 	give_exp_reward()
-	
+	if enemy_health_bar != null:
+		enemy_health_bar.visible = false
 	stop_attack_hurt_box()
 	enemy_died.emit(global_position)
 	if die_sound != null:
@@ -1040,3 +1060,17 @@ func setup_one_audio_player(sound: AudioStreamPlayer2D) -> void:
 	sound.stream_paused = false
 	sound.max_distance = 10000.0
 	sound.attenuation = 0.0
+func is_targeting_player() -> bool:
+	if current_state == SkeletonState.DIE:
+		return false
+
+	if player == null:
+		return false
+
+	if not is_instance_valid(player):
+		return false
+
+	if PlayerManager.player == null:
+		return false
+
+	return player == PlayerManager.player

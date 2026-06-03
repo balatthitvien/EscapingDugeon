@@ -63,7 +63,7 @@ const GRAVITY: float = 1000.0
 @export var leash_padding: float = 70.0
 
 @export var remove_after_die: bool = true
-
+@onready var enemy_health_bar: Node = get_node_or_null("EnemyHealthBar")
 @export var walk_volume_db: float = 5.0
 @export var attack_volume_db: float = 4.0
 @export var hurt_volume_db: float = 4.0
@@ -72,7 +72,9 @@ const GRAVITY: float = 1000.0
 
 @export var ambush_attack_after_open: bool = true
 @export var ambush_attack_delay: float = 0.01
-
+@export var counter_attack_after_hurt: bool = true
+@export var counter_attack_distance: float = 95.0
+@export var hurt_stun_cooldown_time: float = 2.0
 var current_state: MimicState = MimicState.CHEST
 var current_health: int = 0
 
@@ -92,10 +94,14 @@ var patrol_target_x: float = 0.0
 
 var attack_cooldown_timer: float = 0.0
 var hurt_timer: float = 0.0
-
+var hurt_stun_cooldown_timer: float = 0.0
 
 func _ready() -> void:
+	add_to_group("enemy")
 	current_health = max_health
+
+	if enemy_health_bar != null and enemy_health_bar.has_method("set_health"):
+		enemy_health_bar.set_health(current_health, max_health)
 
 	patrol_left_x = left_point.global_position.x
 	patrol_right_x = right_point.global_position.x
@@ -356,7 +362,24 @@ func update_timers(delta: float) -> void:
 	if attack_cooldown_timer > 0.0:
 		attack_cooldown_timer -= delta
 
+	if hurt_stun_cooldown_timer > 0.0:
+		hurt_stun_cooldown_timer -= delta
+		if hurt_stun_cooldown_timer < 0.0:
+			hurt_stun_cooldown_timer = 0.0
+func can_counter_attack_player() -> bool:
+	if not has_valid_player():
+		return false
 
+	var x_distance: float = absf(player.global_position.x - global_position.x)
+	var y_distance: float = absf(player.global_position.y - global_position.y)
+
+	if x_distance > counter_attack_distance:
+		return false
+
+	if y_distance > attack_y_tolerance:
+		return false
+
+	return true
 func apply_gravity(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
@@ -410,7 +433,6 @@ func process_chase(_delta: float) -> void:
 	var x_distance: float = absf(player.global_position.x - global_position.x)
 	var y_distance: float = absf(player.global_position.y - global_position.y)
 
-	# Nếu đã đủ gần để đánh thì đánh ngay.
 	if x_distance <= attack_distance and y_distance <= attack_y_tolerance:
 		velocity.x = 0.0
 
@@ -418,11 +440,6 @@ func process_chase(_delta: float) -> void:
 			change_state(MimicState.ATTACK)
 			return
 
-		play_idle_animation()
-		return
-
-	if x_distance <= stop_chase_distance:
-		velocity.x = 0.0
 		play_idle_animation()
 		return
 
@@ -438,6 +455,10 @@ func process_hurt(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, 500.0 * delta)
 
 	if hurt_timer <= 0.0:
+		if counter_attack_after_hurt and can_counter_attack_player() and attack_cooldown_timer <= 0.0:
+			change_state(MimicState.ATTACK)
+			return
+
 		if has_valid_player():
 			change_state(MimicState.CHASE)
 		else:
@@ -562,17 +583,11 @@ func take_damage(amount: int, attacker_position: Vector2 = Vector2.ZERO) -> void
 	current_health -= amount
 	current_health = clamp(current_health, 0, max_health)
 
+	if enemy_health_bar != null and enemy_health_bar.has_method("show_damage_health"):
+		enemy_health_bar.show_damage_health(current_health, max_health)
+
 	if current_health <= 0:
 		change_state(MimicState.DIE)
-		return
-
-	# Nếu Mimic đang attack:
-	# - vẫn mất máu
-	# - vẫn phát hurt sound
-	# - KHÔNG ngắt animation attack
-	# - KHÔNG chuyển sang hurt
-	if current_state == MimicState.ATTACK:
-		play_hurt_sound()
 		return
 
 	if attacker_position != Vector2.ZERO:
@@ -581,6 +596,21 @@ func take_damage(amount: int, attacker_position: Vector2 = Vector2.ZERO) -> void
 		else:
 			set_facing_direction(1)
 
+	if current_state == MimicState.ATTACK:
+		play_hurt_sound()
+		return
+
+	if hurt_stun_cooldown_timer > 0.0:
+		play_hurt_sound()
+
+		if has_valid_player():
+			change_state(MimicState.CHASE)
+
+		return
+
+	hurt_stun_cooldown_timer = hurt_stun_cooldown_time
+
+	if attacker_position != Vector2.ZERO:
 		var knockback_direction: float = 1.0
 
 		if global_position.x < attacker_position.x:
@@ -592,11 +622,11 @@ func take_damage(amount: int, attacker_position: Vector2 = Vector2.ZERO) -> void
 		velocity.y = knockback_force_y
 
 	change_state(MimicState.HURT)
-
 func start_die() -> void:
 	is_dead = true
 	velocity = Vector2.ZERO
-
+	if enemy_health_bar != null:
+		enemy_health_bar.visible = false
 	LevelManager.set_game_flag(get_open_flag(), true)
 	LevelManager.set_game_flag(get_dead_flag(), true)
 
@@ -957,3 +987,17 @@ func play_hurt_sound() -> void:
 	hurt_sound.stop()
 	hurt_sound.volume_db = hurt_volume_db
 	hurt_sound.play()
+func is_targeting_player() -> bool:
+	if is_dead:
+		return false
+
+	if player == null:
+		return false
+
+	if not is_instance_valid(player):
+		return false
+
+	if PlayerManager.player == null:
+		return false
+
+	return player == PlayerManager.player

@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://c1kpt4mmiitni"]
+
+[ext_resource type="Texture2D" uid="uid://fep2nssq435u" path="res://Things/Flag/Flag.png" id="1_6dvwq"]
+[ext_resource type="Script" uid="uid://ej436736p1v4" path="res://Things/Flag/Flag.gd" id="1_b4vqv"]
+
+[sub_resource type="Animation" id="Animation_b4vqv"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_yayf0"]
+resource_name = "idle"
+length = 1.2
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_qln5u"]
+_data = {
+&"RESET": SubResource("Animation_b4vqv"),
+&"idle": SubResource("Animation_yayf0")
+}
+
+[node name="Flag" type="Node2D" unique_id=1902005785]
+script = ExtResource("1_b4vqv")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=478835000]
+texture = ExtResource("1_6dvwq")
+hframes = 5
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=264644514]
+libraries/ = SubResource("AnimationLibrary_qln5u")

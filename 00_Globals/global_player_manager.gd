@@ -16,7 +16,7 @@ const PLAYER_STAT_NAMES: Array[String] = [
 	"coin_count",
 	"potion_count",
 	"has_seen_potion_tip",
-	
+
 	"max_health_units",
 	"current_health_units",
 
@@ -31,6 +31,10 @@ func register_player(new_player: Node) -> void:
 		apply_saved_stats_to_player()
 	else:
 		capture_runtime_stats_from_player(false)
+
+	# Dù là load hay vào game thường, vẫn refresh chậm 1 nhịp
+	# để HUD chắc chắn đã sẵn sàng.
+	call_deferred("call_player_refresh_after_restore")
 
 
 func clear_player(old_player: Node = null) -> void:
@@ -80,7 +84,10 @@ func apply_saved_stats_to_player() -> void:
 		is_respawning = false
 
 	reset_player_runtime_state()
-	call_player_refresh_after_restore()
+
+	# Không gọi refresh ngay lập tức nữa.
+	# Gọi chậm lại để tránh HUD chưa kịp ready sau khi mở game/load scene.
+	call_deferred("call_player_refresh_after_restore")
 
 
 func make_saved_health_full() -> void:
@@ -92,12 +99,18 @@ func make_player_health_full() -> void:
 	if player == null:
 		return
 
+	if not is_instance_valid(player):
+		return
+
 	if has_object_property(player, "max_health_units") and has_object_property(player, "current_health_units"):
 		player.set("current_health_units", player.get("max_health_units"))
 
 
 func reset_player_runtime_state() -> void:
 	if player == null:
+		return
+
+	if not is_instance_valid(player):
 		return
 
 	if has_object_property(player, "velocity"):
@@ -141,13 +154,28 @@ func has_object_property(obj: Object, prop_name: String) -> bool:
 
 
 func call_player_refresh_after_restore() -> void:
+	# Đợi vài frame để Player, HUD, CanvasLayer, label, heart container...
+	# đều kịp chạy _ready().
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+
 	if player == null:
 		return
 
-	if player.has_method("refresh_after_restore"):
-		player.call("refresh_after_restore")
+	if not is_instance_valid(player):
 		return
 
+	# Ưu tiên hàm chuyên dùng sau khi load.
+	if player.has_method("refresh_after_restore"):
+		player.call("refresh_after_restore")
+
+	if player.has_method("refresh_after_restore_delayed"):
+		player.call("refresh_after_restore_delayed")
+
+	return
+
+	# Các tên hàm dự phòng nếu Player của bạn đang dùng tên khác.
 	if player.has_method("update_hud"):
 		player.call("update_hud")
 
@@ -156,3 +184,19 @@ func call_player_refresh_after_restore() -> void:
 
 	if player.has_method("refresh_hud"):
 		player.call("refresh_hud")
+
+	if player.has_method("update_health_ui"):
+		player.call("update_health_ui")
+
+	if player.has_method("update_coin_ui"):
+		player.call("update_coin_ui")
+
+	if player.has_method("update_exp_ui"):
+		player.call("update_exp_ui")
+
+	if player.has_method("update_potion_ui"):
+		player.call("update_potion_ui")
+
+
+func force_refresh_player_ui() -> void:
+	call_deferred("call_player_refresh_after_restore")

@@ -28,14 +28,14 @@ func Process(_delta: float) -> State:
 	return null
 
 
-func HandleInput(_event: InputEvent) -> State:
+func HandleInput(event: InputEvent) -> State:
 	if !player.can_do_action():
 		return null
 
-	if _event.is_action_pressed("attack"):
+	if player.is_attack_event_pressed(event):
 		return attack
 
-	if _event.is_action_pressed("jump") and player.is_on_floor():
+	if player.is_jump_event_pressed(event) and player.is_on_floor():
 		return jump
 
 	return null
