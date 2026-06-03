@@ -431,8 +431,11 @@ func scan_vision_for_player() -> bool:
 
 
 func remember_player_from_attack(attacker_position: Vector2 = Vector2.ZERO) -> void:
-	if PlayerManager.player != null and PlayerManager.player is Player:
-		player = PlayerManager.player as Player
+	if attacker_position != Vector2.ZERO:
+		var nearest_player := find_nearest_player_to_position(attacker_position)
+
+		if nearest_player != null:
+			player = nearest_player
 
 	combat_memory_timer = combat_memory_time
 
@@ -444,7 +447,57 @@ func remember_player_from_attack(attacker_position: Vector2 = Vector2.ZERO) -> v
 	elif has_valid_player():
 		update_direction_to_player()
 
+func find_nearest_player_to_position(target_position: Vector2) -> Player:
+	var nearest_player: Player = null
+	var nearest_distance: float = 999999.0
 
+	var groups_to_check: Array[String] = [
+		"players",
+		"player",
+		"Player"
+	]
+
+	for group_name in groups_to_check:
+		for node in get_tree().get_nodes_in_group(group_name):
+			var detected_player := find_player_from_node(node)
+
+			if detected_player == null:
+				continue
+
+			if !is_instance_valid(detected_player):
+				continue
+
+			if detected_player.is_dead:
+				continue
+
+			var distance: float = detected_player.global_position.distance_to(target_position)
+
+			if distance < nearest_distance:
+				nearest_distance = distance
+				nearest_player = detected_player
+
+	var player_1_node := get_tree().root.find_child("Player", true, false)
+	var player_2_node := get_tree().root.find_child("Player2", true, false)
+
+	for node in [player_1_node, player_2_node]:
+		var detected_player := find_player_from_node(node)
+
+		if detected_player == null:
+			continue
+
+		if !is_instance_valid(detected_player):
+			continue
+
+		if detected_player.is_dead:
+			continue
+
+		var distance: float = detected_player.global_position.distance_to(target_position)
+
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest_player = detected_player
+
+	return nearest_player
 func update_direction_to_player() -> void:
 	if not has_valid_player():
 		return
@@ -950,6 +1003,9 @@ func find_player_from_node(node: Node) -> Player:
 		if current is Player:
 			return current as Player
 
+		if current.is_in_group("players"):
+			return current as Player
+
 		if current.is_in_group("player"):
 			return current as Player
 
@@ -957,6 +1013,9 @@ func find_player_from_node(node: Node) -> Player:
 			return current as Player
 
 		if current.name == "Player":
+			return current as Player
+
+		if current.name == "Player2":
 			return current as Player
 
 		current = current.get_parent()
@@ -967,6 +1026,9 @@ func find_player_from_node(node: Node) -> Player:
 		if owner_node is Player:
 			return owner_node as Player
 
+		if owner_node.is_in_group("players"):
+			return owner_node as Player
+
 		if owner_node.is_in_group("player"):
 			return owner_node as Player
 
@@ -974,6 +1036,9 @@ func find_player_from_node(node: Node) -> Player:
 			return owner_node as Player
 
 		if owner_node.name == "Player":
+			return owner_node as Player
+
+		if owner_node.name == "Player2":
 			return owner_node as Player
 
 	return null
@@ -1070,7 +1135,7 @@ func is_targeting_player() -> bool:
 	if not is_instance_valid(player):
 		return false
 
-	if PlayerManager.player == null:
-		return false
+	if player is Player:
+		return true
 
-	return player == PlayerManager.player
+	return false

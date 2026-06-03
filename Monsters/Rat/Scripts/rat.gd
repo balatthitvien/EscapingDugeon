@@ -628,20 +628,37 @@ func remember_player_from_vision_area() -> bool:
 
 
 func find_player_anywhere() -> Player:
+	for node in get_tree().get_nodes_in_group("players"):
+		var detected_player: Player = find_player_from_node(node)
+
+		if detected_player != null:
+			return detected_player
+
 	for node in get_tree().get_nodes_in_group("player"):
 		var detected_player: Player = find_player_from_node(node)
+
 		if detected_player != null:
 			return detected_player
 
 	for node in get_tree().get_nodes_in_group("Player"):
 		var detected_player: Player = find_player_from_node(node)
+
 		if detected_player != null:
 			return detected_player
 
-	var by_name: Node = get_tree().root.find_child("Player", true, false)
+	var player_1_node: Node = get_tree().root.find_child("Player", true, false)
 
-	if by_name != null:
-		var detected_player: Player = find_player_from_node(by_name)
+	if player_1_node != null:
+		var detected_player: Player = find_player_from_node(player_1_node)
+
+		if detected_player != null:
+			return detected_player
+
+	var player_2_node: Node = get_tree().root.find_child("Player2", true, false)
+
+	if player_2_node != null:
+		var detected_player: Player = find_player_from_node(player_2_node)
+
 		if detected_player != null:
 			return detected_player
 
@@ -689,6 +706,9 @@ func find_player_from_node(node: Node) -> Player:
 		if current is Player:
 			return current as Player
 
+		if current.is_in_group("players"):
+			return current as Player
+
 		if current.is_in_group("player"):
 			return current as Player
 
@@ -698,12 +718,18 @@ func find_player_from_node(node: Node) -> Player:
 		if current.name == "Player":
 			return current as Player
 
+		if current.name == "Player2":
+			return current as Player
+
 		current = current.get_parent()
 
 	if node != null and node.owner != null:
 		var owner_node: Node = node.owner
 
 		if owner_node is Player:
+			return owner_node as Player
+
+		if owner_node.is_in_group("players"):
 			return owner_node as Player
 
 		if owner_node.is_in_group("player"):
@@ -715,8 +741,10 @@ func find_player_from_node(node: Node) -> Player:
 		if owner_node.name == "Player":
 			return owner_node as Player
 
-	return null
+		if owner_node.name == "Player2":
+			return owner_node as Player
 
+	return null
 
 # =========================
 # DIRECTION / DISTANCE
@@ -975,7 +1003,7 @@ func is_targeting_player() -> bool:
 	if not is_instance_valid(player):
 		return false
 
-	if PlayerManager.player == null:
-		return false
+	if player is Player:
+		return true
 
-	return player == PlayerManager.player
+	return false

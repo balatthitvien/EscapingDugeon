@@ -95,7 +95,7 @@ var patrol_target_x: float = 0.0
 var attack_cooldown_timer: float = 0.0
 var hurt_timer: float = 0.0
 var hurt_stun_cooldown_timer: float = 0.0
-
+var players_near: Dictionary = {}
 func _ready() -> void:
 	add_to_group("enemy")
 	current_health = max_health
@@ -231,10 +231,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not player_in_interact_range:
 		return
 
-	if event.is_action_pressed("interact"):
-		get_viewport().set_input_as_handled()
-		await open_mimic_chest()
+	var action_player := get_player_pressed_interact_event(event)
 
+	if action_player == null:
+		return
+
+	player = action_player
+	get_viewport().set_input_as_handled()
+
+	await open_mimic_chest(action_player)
 
 func get_open_flag() -> String:
 	return mimic_id + "_opened"
@@ -275,14 +280,18 @@ func set_as_mimic_immediate() -> void:
 	play_animation("walk")
 
 
-func open_mimic_chest() -> void:
+func open_mimic_chest(opening_player: Player = null) -> void:
 	if is_transformed:
 		return
 
 	is_transformed = true
 	current_state = MimicState.TRANSFORM
 
+	# Bất kỳ Player nào mở Mimic đều lưu trạng thái đã biến thành quái.
 	LevelManager.set_game_flag(get_open_flag(), true)
+
+	if opening_player != null:
+		player = opening_player
 
 	if talk_indicator != null:
 		talk_indicator.visible = false
@@ -306,7 +315,8 @@ func open_mimic_chest() -> void:
 
 	enable_enemy_parts(true)
 
-	player = PlayerManager.player
+	if player == null or !is_instance_valid(player):
+		find_valid_player_in_vision()
 
 	if player != null and is_instance_valid(player):
 		update_direction_to_player()
@@ -321,7 +331,6 @@ func open_mimic_chest() -> void:
 		change_state(MimicState.CHASE)
 	else:
 		change_state(MimicState.PATROL)
-
 
 func enable_interaction(value: bool) -> void:
 	if interact_area != null:
@@ -810,7 +819,8 @@ func try_set_player_in_range(target: Node) -> void:
 	if detected_player == null:
 		return
 
-	player_in_interact_range = true
+	players_near[detected_player.get_instance_id()] = detected_player
+	player_in_interact_range = !players_near.is_empty()
 	player = detected_player
 
 	if talk_indicator != null and current_state == MimicState.CHEST:
@@ -823,12 +833,17 @@ func try_remove_player_from_range(target: Node) -> void:
 	if detected_player == null:
 		return
 
-	if detected_player != player:
-		return
+	var id := detected_player.get_instance_id()
 
-	player_in_interact_range = false
+	if players_near.has(id):
+		players_near.erase(id)
 
-	if talk_indicator != null:
+	player_in_interact_range = !players_near.is_empty()
+
+	if player == detected_player:
+		player = get_any_near_player()
+
+	if !player_in_interact_range and talk_indicator != null:
 		talk_indicator.visible = false
 
 
@@ -879,22 +894,45 @@ func _on_hit_box_area_entered(area: Area2D) -> void:
 		damage_amount = int(possible_damage)
 
 	var attacker_position: Vector2 = Vector2.ZERO
+	var attacker_player := find_player_from_node(area)
 
-	if PlayerManager.player != null:
+	if attacker_player == null and area.get_parent() != null:
+		attacker_player = find_player_from_node(area.get_parent())
+
+	if attacker_player != null:
+		player = attacker_player
+		attacker_position = attacker_player.global_position
+	elif PlayerManager.player != null:
 		attacker_position = PlayerManager.player.global_position
 
 	take_damage(damage_amount, attacker_position)
 
-
 func _on_hit_box_damaged(arg1 = null, arg2 = null, arg3 = null) -> void:
 	var damage_amount: int = 1
 	var attacker_position: Vector2 = Vector2.ZERO
+	var attacker: Node = null
 
 	if typeof(arg1) == TYPE_INT or typeof(arg1) == TYPE_FLOAT:
 		damage_amount = int(arg1)
+	elif arg1 is Node:
+		attacker = arg1
 
 	if arg2 is Vector2:
 		attacker_position = arg2
+	elif arg2 is Node:
+		attacker = arg2
+
+	if arg3 is Node:
+		attacker = arg3
+
+	if attacker != null:
+		var attacker_player := find_player_from_node(attacker)
+
+		if attacker_player != null:
+			player = attacker_player
+			attacker_position = attacker_player.global_position
+		elif attacker is Node2D:
+			attacker_position = attacker.global_position
 
 	if attacker_position == Vector2.ZERO and PlayerManager.player != null:
 		attacker_position = PlayerManager.player.global_position
@@ -917,6 +955,9 @@ func find_player_from_node(node: Node) -> Player:
 		if current is Player:
 			return current as Player
 
+		if current.is_in_group("players"):
+			return current as Player
+
 		if current.is_in_group("player"):
 			return current as Player
 
@@ -926,7 +967,31 @@ func find_player_from_node(node: Node) -> Player:
 		if current.name == "Player":
 			return current as Player
 
+		if current.name == "Player2":
+			return current as Player
+
 		current = current.get_parent()
+
+	if node != null and node.owner != null:
+		var owner_node: Node = node.owner
+
+		if owner_node is Player:
+			return owner_node as Player
+
+		if owner_node.is_in_group("players"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("player"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("Player"):
+			return owner_node as Player
+
+		if owner_node.name == "Player":
+			return owner_node as Player
+
+		if owner_node.name == "Player2":
+			return owner_node as Player
 
 	return null
 
@@ -997,7 +1062,56 @@ func is_targeting_player() -> bool:
 	if not is_instance_valid(player):
 		return false
 
-	if PlayerManager.player == null:
+	if player is Player:
+		return true
+
+	return false
+func get_any_near_player() -> Player:
+	for key in players_near.keys():
+		var p: Player = players_near[key]
+
+		if p != null and is_instance_valid(p):
+			return p
+
+	return null
+func get_player_pressed_interact_event(event: InputEvent) -> Player:
+	for key in players_near.keys():
+		var p: Player = players_near[key]
+
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		if p.has_method("is_interact_event_pressed"):
+			if p.is_interact_event_pressed(event):
+				return p
+		else:
+			var action_name := get_interact_action_for_player(p)
+
+			if event.is_action_pressed(action_name):
+				return p
+
+	return null
+
+
+func get_interact_action_for_player(target_player: Player) -> StringName:
+	if !is_two_player_mode():
+		return &"interact"
+
+	var id_value: int = int(target_player.get("player_id"))
+
+	if id_value == 1:
+		return &"p1_interact"
+
+	return &"p2_interact"
+
+
+func is_two_player_mode() -> bool:
+	var game_mode := get_node_or_null("/root/GameMode")
+
+	if game_mode == null:
 		return false
 
-	return player == PlayerManager.player
+	return game_mode.is_two_players()

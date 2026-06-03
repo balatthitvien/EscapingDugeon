@@ -25,6 +25,7 @@
 [ext_resource type="PackedScene" uid="uid://dk6xs1s2uasig" path="res://Things/SawTrap/saw_trap.tscn" id="22_7islr"]
 [ext_resource type="PackedScene" uid="uid://be5iph5libhbw" path="res://CampFire/camp_fire.tscn" id="24_be8vy"]
 [ext_resource type="Script" uid="uid://byu15w62cba72" path="res://level/testlevel/story_dialog.gd" id="25_gnhie"]
+[ext_resource type="Script" uid="uid://y6tobysm1hmr" path="res://level/testlevel/shared_camera.gd" id="26_l5p25"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_w5gor"]
 texture = ExtResource("2_in04d")
@@ -844,8 +845,6 @@ shape = SubResource("CapsuleShape2D_q5dx8")
 
 [node name="Chest" parent="." unique_id=928115993 instance=ExtResource("16_7lgkr")]
 position = Vector2(1198, -384)
-chest_id = "chest_map_2_001"
-is_supply_chest = true
 
 [node name="Chest2" parent="." unique_id=833861587 instance=ExtResource("16_7lgkr")]
 position = Vector2(4934, -636)
@@ -1001,3 +1000,12 @@ offset_bottom = 23.0
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
+
+[node name="SharedCamera" type="Camera2D" parent="." unique_id=1914999008]
+limit_left = 0
+limit_top = -220
+limit_right = 1095
+limit_bottom = 50
+script = ExtResource("26_l5p25")
+min_zoom = Vector2(0.45, 1.5)
+horizontal_margin = 200.0

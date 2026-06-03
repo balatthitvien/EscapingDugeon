@@ -13,6 +13,7 @@ enum WitcherState {
 
 @export var player_portrait: Texture2D
 @export var npc_portrait: Texture2D
+@export var npc_id: String = "npc_witcher"
 
 @export var idle_min_time: float = 1.5
 @export var idle_max_time: float = 3.5
@@ -36,6 +37,8 @@ var talk_count: int = 0
 
 func _ready() -> void:
 	randomize()
+
+	talk_count = LevelManager.get_npc_talk_count(npc_id)
 
 	if talk_indicator != null:
 		talk_indicator.visible = false
@@ -182,6 +185,8 @@ func start_dialog() -> void:
 
 func _on_dialog_finished() -> void:
 	talk_count += 1
+	LevelManager.set_npc_talk_count(npc_id, talk_count)
+
 	is_talking = false
 
 	set_all_players_control_enabled(true)

@@ -723,29 +723,50 @@ func remember_player_from_target(target: Node) -> bool:
 
 
 func find_player_anywhere() -> Node:
+	for node in get_tree().get_nodes_in_group("players"):
+		var detected_player: Node = get_player_node_from_target(node)
+
+		if detected_player != null:
+			return detected_player
+
 	for node in get_tree().get_nodes_in_group("player"):
 		var detected_player: Node = get_player_node_from_target(node)
+
 		if detected_player != null:
 			return detected_player
 
 	for node in get_tree().get_nodes_in_group("Player"):
 		var detected_player: Node = get_player_node_from_target(node)
+
 		if detected_player != null:
 			return detected_player
 
-	var by_name: Node = get_tree().root.find_child("Player", true, false)
+	var player_1_node: Node = get_tree().root.find_child("Player", true, false)
 
-	if by_name != null:
-		return by_name
+	if player_1_node != null:
+		var detected_player: Node = get_player_node_from_target(player_1_node)
+
+		if detected_player != null:
+			return detected_player
+
+	var player_2_node: Node = get_tree().root.find_child("Player2", true, false)
+
+	if player_2_node != null:
+		var detected_player: Node = get_player_node_from_target(player_2_node)
+
+		if detected_player != null:
+			return detected_player
 
 	return null
-
 
 func get_player_node_from_target(target: Node) -> Node:
 	var current: Node = target
 
 	while current != null:
 		if current is Player:
+			return current
+
+		if current.is_in_group("players"):
 			return current
 
 		if current.is_in_group("player"):
@@ -757,12 +778,18 @@ func get_player_node_from_target(target: Node) -> Node:
 		if current.name == "Player":
 			return current
 
+		if current.name == "Player2":
+			return current
+
 		current = current.get_parent()
 
 	if target != null and target.owner != null:
 		var owner_node: Node = target.owner
 
 		if owner_node is Player:
+			return owner_node
+
+		if owner_node.is_in_group("players"):
 			return owner_node
 
 		if owner_node.is_in_group("player"):
@@ -774,8 +801,10 @@ func get_player_node_from_target(target: Node) -> Node:
 		if owner_node.name == "Player":
 			return owner_node
 
-	return null
+		if owner_node.name == "Player2":
+			return owner_node
 
+	return null
 
 # =========================
 # VISION
@@ -973,7 +1002,7 @@ func is_targeting_player() -> bool:
 	if not is_instance_valid(player):
 		return false
 
-	if PlayerManager.player == null:
-		return false
+	if player is Player:
+		return true
 
-	return player == PlayerManager.player
+	return false

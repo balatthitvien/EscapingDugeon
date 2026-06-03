@@ -264,10 +264,14 @@ func go_to_next_patrol_point() -> void:
 # =========================
 # CHASE ABOVE PLAYER
 # =========================
-
 func update_chase_above(_delta: float) -> void:
 	if player == null or !is_instance_valid(player):
 		player = null
+
+		if scan_vision_for_player():
+			change_state(BatState.CHASE_ABOVE)
+			return
+
 		change_state(BatState.PATROL)
 		return
 
@@ -275,6 +279,11 @@ func update_chase_above(_delta: float) -> void:
 
 	if distance_to_player > aggro_give_up_distance:
 		player = null
+
+		if scan_vision_for_player():
+			change_state(BatState.CHASE_ABOVE)
+			return
+
 		change_state(BatState.PATROL)
 		return
 
@@ -299,7 +308,6 @@ func update_chase_above(_delta: float) -> void:
 
 	update_direction_to_player()
 	play_animation("walk")
-
 
 # =========================
 # DIVE ATTACK
@@ -685,14 +693,64 @@ func find_player_from_node(node: Node) -> Player:
 		if current is Player:
 			return current as Player
 
+		if current.is_in_group("players"):
+			return current as Player
+
 		if current.is_in_group("player"):
+			return current as Player
+
+		if current.is_in_group("Player"):
+			return current as Player
+
+		if current.name == "Player":
+			return current as Player
+
+		if current.name == "Player2":
 			return current as Player
 
 		current = current.get_parent()
 
+	if node != null and node.owner != null:
+		var owner_node: Node = node.owner
+
+		if owner_node is Player:
+			return owner_node as Player
+
+		if owner_node.is_in_group("players"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("player"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("Player"):
+			return owner_node as Player
+
+		if owner_node.name == "Player":
+			return owner_node as Player
+
+		if owner_node.name == "Player2":
+			return owner_node as Player
+
 	return null
+func scan_vision_for_player() -> bool:
+	if vision_area == null:
+		return false
 
+	for body in vision_area.get_overlapping_bodies():
+		var detected_player := find_player_from_node(body)
 
+		if detected_player != null:
+			player = detected_player
+			return true
+
+	for area in vision_area.get_overlapping_areas():
+		var detected_player := find_player_from_node(area)
+
+		if detected_player != null:
+			player = detected_player
+			return true
+
+	return false
 # =========================
 # SOUND
 # =========================
@@ -791,7 +849,7 @@ func is_targeting_player() -> bool:
 	if not is_instance_valid(player):
 		return false
 
-	if PlayerManager.player == null:
-		return false
+	if player is Player:
+		return true
 
-	return player == PlayerManager.player
+	return false

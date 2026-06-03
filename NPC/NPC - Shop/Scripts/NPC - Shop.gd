@@ -2,7 +2,7 @@ extends CharacterBody2D
 
 enum ShopState {
 	IDLE,
- CHILL,
+	CHILL,
 	WORK,
 	DIALOG
 }
@@ -13,6 +13,7 @@ enum ShopState {
 
 @export var player_portrait: Texture2D
 @export var npc_portrait: Texture2D
+@export var npc_id: String = "npc_shop"
 
 @export var idle_min_time: float = 2.0
 @export var idle_max_time: float = 4.0
@@ -37,6 +38,8 @@ var should_open_shop_after_dialog: bool = false
 
 func _ready() -> void:
 	randomize()
+
+	talk_count = LevelManager.get_npc_talk_count(npc_id)
 
 	if talk_indicator != null:
 		talk_indicator.visible = false
@@ -92,13 +95,13 @@ func start_random_behavior() -> void:
 
 		var available_actions: Array[String] = []
 
-		if anim.has_animation("idle"):
+		if anim != null and anim.has_animation("idle"):
 			available_actions.append("idle")
 
-		if anim.has_animation("chill"):
+		if anim != null and anim.has_animation("chill"):
 			available_actions.append("chill")
 
-		if anim.has_animation("work"):
+		if anim != null and anim.has_animation("work"):
 			available_actions.append("work")
 
 		if available_actions.is_empty():
@@ -202,6 +205,8 @@ func start_dialog() -> void:
 
 func _on_dialog_finished() -> void:
 	talk_count += 1
+	LevelManager.set_npc_talk_count(npc_id, talk_count)
+
 	is_talking = false
 
 	if should_open_shop_after_dialog:
