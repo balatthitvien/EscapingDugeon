@@ -2,8 +2,10 @@
 
 [ext_resource type="Script" uid="uid://cv4mbouh5bu4f" path="res://Player/Scripts/player.gd" id="1_btcbx"]
 [ext_resource type="Texture2D" uid="uid://dj75swmp0hy8l" path="res://Player/Sprite/Attack +idle+walk+jump+falling.png" id="2_gu6f8"]
+[ext_resource type="PackedScene" uid="uid://cycw55fetyleu" path="res://Player/Arrow/arrow.tscn" id="2_lfmf2"]
 [ext_resource type="AudioStream" uid="uid://bj4ki0v63a4g2" path="res://Player/Sound/foley_footstep_vinyl_4.wav" id="3_x3vf3"]
 [ext_resource type="AudioStream" uid="uid://dd53jtv012les" path="res://Player/Sound/whoosh_1.wav" id="4_5htga"]
+[ext_resource type="Texture2D" uid="uid://cud7gac5iv74c" path="res://Player/Sprite/Attack +idle+walk+jump+falling-sheet2.png" id="4_b1ygp"]
 [ext_resource type="Script" uid="uid://c7ul0k3f54feh" path="res://Player/Scripts/state_attack.gd" id="4_fhl08"]
 [ext_resource type="Script" uid="uid://debw0k8j3ewts" path="res://Player/Scripts/player_state_machine.gd" id="4_od3ui"]
 [ext_resource type="AudioStream" uid="uid://xm2exwll7dif" path="res://Player/Sound/foley_footstep_concrete_4.wav" id="5_p5o4e"]
@@ -13,6 +15,9 @@
 [ext_resource type="Script" uid="uid://bfs71r0in8y14" path="res://Player/Scripts/state_jump.gd" id="7_00tjw"]
 [ext_resource type="PackedScene" uid="uid://c288dt5tki3wj" path="res://GeneralNode/HurtBox/hurt_box.tscn" id="7_vtle1"]
 [ext_resource type="Script" uid="uid://dcf20sgkprckg" path="res://Player/Scripts/PlayerInteractionsHost.gd" id="8_00tjw"]
+[ext_resource type="AudioStream" uid="uid://b1w243x0l1vxq" path="res://Player/Sound/arrow-sound.mp3" id="8_pisgm"]
+[ext_resource type="AudioStream" uid="uid://ctn7h68juo76o" path="res://Player/Sound/heal (mp3cut.net).mp3" id="10_o28un"]
+[ext_resource type="Script" uid="uid://b1a3qgh2coqwg" path="res://Player/state_shoot.gd" id="12_dkpta"]
 [ext_resource type="Script" uid="uid://df7we3p1ifcbo" path="res://GeneralNode/HitBox/hit_box.gd" id="13_p5o4e"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_lfmf2"]
@@ -344,6 +349,77 @@ tracks/1/keys = {
 "values": [Vector2(8, -15), Vector2(8, -15), Vector2(8, -15), Vector2(8, -15), Vector2(8, -15), Vector2(8, -15), Vector2(8, -15), Vector2(8, -15)]
 }
 
+[sub_resource type="Animation" id="Animation_7emwf"]
+resource_name = "shoot_left"
+length = 0.9
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [73, 74, 75, 76, 77, 78, 79, 80, 81]
+}
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.68),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"spawn_arrow_projectile"
+}]
+}
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(),
+"transitions": PackedFloat32Array(),
+"values": []
+}
+
+[sub_resource type="Animation" id="Animation_n471f"]
+resource_name = "shoot_right"
+length = 0.9
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [64, 65, 66, 67, 68, 69, 70, 71, 72]
+}
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.68),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"spawn_arrow_projectile"
+}]
+}
+
 [sub_resource type="Animation" id="Animation_gu6f8"]
 resource_name = "walk_left"
 length = 0.7
@@ -452,6 +528,8 @@ _data = {
 &"idle_right": SubResource("Animation_00tjw"),
 &"jump_left": SubResource("Animation_5htga"),
 &"jump_right": SubResource("Animation_p5o4e"),
+&"shoot_left": SubResource("Animation_7emwf"),
+&"shoot_right": SubResource("Animation_n471f"),
 &"walk_left": SubResource("Animation_gu6f8"),
 &"walk_right": SubResource("Animation_dkpta")
 }
@@ -464,11 +542,15 @@ _data = {
 collision_layer = 2
 collision_mask = 257
 script = ExtResource("1_btcbx")
+arrow_scene = ExtResource("2_lfmf2")
+arrow_damage = 2
+player_1_texture = ExtResource("2_gu6f8")
+player_2_texture = ExtResource("4_b1ygp")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1646399172]
 position = Vector2(5, -21)
 texture = ExtResource("2_gu6f8")
-hframes = 64
+hframes = 82
 
 [node name="AudioListener2D" type="AudioListener2D" parent="." unique_id=262378830]
 
@@ -497,6 +579,12 @@ bus = &"SFX"
 stream = ExtResource("5_p5o4e")
 bus = &"SFX"
 
+[node name="BowShoot" type="AudioStreamPlayer2D" parent="Audio" unique_id=1212360302]
+stream = ExtResource("8_pisgm")
+
+[node name="PotionUse" type="AudioStreamPlayer2D" parent="Audio" unique_id=250999095]
+stream = ExtResource("10_o28un")
+
 [node name="StateMachine" type="Node" parent="." unique_id=1757571275]
 script = ExtResource("4_od3ui")
 
@@ -511,6 +599,9 @@ script = ExtResource("7_00tjw")
 
 [node name="Attack" type="Node" parent="StateMachine" unique_id=1600940725]
 script = ExtResource("4_fhl08")
+
+[node name="Shoot" type="Node" parent="StateMachine" unique_id=1229462274]
+script = ExtResource("12_dkpta")
 
 [node name="Interactions" type="Node2D" parent="." unique_id=1643005367]
 script = ExtResource("8_00tjw")
@@ -537,3 +628,6 @@ metadata/_custom_type_script = "uid://df7we3p1ifcbo"
 position = Vector2(8, -15)
 shape = SubResource("CapsuleShape2D_gu6f8")
 debug_color = Color(3.8263947e-06, 0.6487351, 0.18113711, 0.41960785)
+
+[node name="ArrowSpawnPoint" type="Marker2D" parent="." unique_id=1127572805]
+position = Vector2(25, -19)

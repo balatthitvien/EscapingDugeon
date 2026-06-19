@@ -4,18 +4,19 @@
 [ext_resource type="PackedScene" uid="uid://kj7d6epneag1" path="res://Heart/heart.tscn" id="2_hofmm"]
 [ext_resource type="Texture2D" uid="uid://djqrbkn7f04i5" path="res://Coin/coin-icon.png" id="2_lplkf"]
 [ext_resource type="FontFile" uid="uid://cw8gb6uqik71j" path="res://MainMenu/RasterForgeRegular-JpBgm.ttf" id="3_hofmm"]
+[ext_resource type="Texture2D" uid="uid://co43ppx03e7my" path="res://NPC/NPC - Witcher/Sprites/potion-damage.png" id="3_u3lhu"]
 [ext_resource type="Texture2D" uid="uid://d1rgserlhyaog" path="res://Player/HUD/exp bar 1.png" id="4_71aj4"]
+[ext_resource type="Texture2D" uid="uid://h3v38anqvtc8" path="res://NPC/NPC - Witcher/Sprites/potion-defense.png" id="4_mcmai"]
+[ext_resource type="Texture2D" uid="uid://bgxwjvf5giy7n" path="res://NPC/NPC - Witcher/Sprites/potion-speed.png" id="5_4jd4a"]
 [ext_resource type="Texture2D" uid="uid://duf4dsrv3ed3y" path="res://Things/Potion - heal/Potion-heal.png" id="5_5ps51"]
+[ext_resource type="Texture2D" uid="uid://bv31fbtcuauug" path="res://Player/Sprite/arrowplayer.png" id="7_nbfk3"]
 
 [node name="PlayerHUD" type="CanvasLayer" unique_id=1490889111]
 script = ExtResource("1_5w10p")
 heart_scene = ExtResource("2_hofmm")
-hearts_start_position = null
-heart_spacing = null
-coin_icon_position = null
-coin_label_position = null
-exp_bar_position = null
-exp_bar_frame_count = null
+strength_potion_texture = ExtResource("3_u3lhu")
+defense_potion_texture = ExtResource("4_mcmai")
+speed_potion_texture = ExtResource("5_4jd4a")
 
 [node name="HeartRow" type="Node2D" parent="." unique_id=209614438]
 position = Vector2(23, 16)
@@ -32,7 +33,7 @@ position = Vector2(28, 54)
 texture = ExtResource("2_lplkf")
 
 [node name="PotionIcon" type="Sprite2D" parent="." unique_id=1779468072]
-position = Vector2(27, 74)
+position = Vector2(27, 227)
 texture = ExtResource("5_5ps51")
 
 [node name="ExpBar" type="Node2D" parent="." unique_id=372617504]
@@ -52,9 +53,9 @@ theme_override_font_sizes/font_size = 11
 
 [node name="PotionCountLabel" type="Label" parent="." unique_id=494495238]
 offset_left = 39.0
-offset_top = 63.0
+offset_top = 216.0
 offset_right = 79.0
-offset_bottom = 86.0
+offset_bottom = 239.0
 theme_override_fonts/font = ExtResource("3_hofmm")
 
 [node name="PotionHintLabel" type="Label" parent="." unique_id=36854711]
@@ -64,3 +65,14 @@ offset_top = 130.0
 offset_right = 348.0
 offset_bottom = 153.0
 text = "Bấm R để sử dụng bình máu"
+
+[node name="ArrowIcon" type="Sprite2D" parent="." unique_id=1629354362]
+position = Vector2(24, 71)
+texture = ExtResource("7_nbfk3")
+
+[node name="ArrowCountLabel" type="Label" parent="." unique_id=855040629]
+offset_left = 41.0
+offset_top = 66.0
+offset_right = 77.0
+offset_bottom = 89.0
+theme_override_fonts/font = ExtResource("3_hofmm")

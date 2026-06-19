@@ -1,8 +1,8 @@
 extends Node2D
 
-@onready var sprite_2d: Sprite2D = $Sprite2D
-@onready var collision_shape_2d: CollisionShape2D = $CollisionShape2D
-@onready var animation_player: AnimationPlayer = $AnimationPlayer
+@onready var sprite_2d: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
+@onready var collision_shape_2d: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
+@onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer") as AnimationPlayer
 
 @export var idle_animation_name: String = "idle"
 @export var play_on_ready: bool = true
@@ -28,8 +28,7 @@ func setup_collision() -> void:
 	if collision_shape_2d == null:
 		return
 
-	# Nếu chỉ là vật trang trí thì tắt va chạm đi.
-	collision_shape_2d.disabled = not use_collision
+	collision_shape_2d.set_deferred("disabled", !use_collision)
 
 
 func play_idle() -> void:
@@ -48,7 +47,6 @@ func play_idle() -> void:
 
 	animation_player.play(idle_animation_name)
 
-	# Cho nhiều lá cờ lệch nhịp nhau, nhìn tự nhiên hơn.
 	if randomize_start_time:
 		var anim_length: float = animation_player.current_animation_length
 

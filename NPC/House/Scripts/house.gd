@@ -1,6 +1,4 @@
 extends CharacterBody2D
-# Nếu House của bạn là StaticBody2D thì đổi dòng trên thành:
-# extends StaticBody2D
 
 @onready var anim: AnimationPlayer = $AnimationPlayer
 

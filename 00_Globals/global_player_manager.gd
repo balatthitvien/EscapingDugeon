@@ -16,6 +16,13 @@ const PLAYER_STAT_NAMES: Array[String] = [
 	"coin_count",
 	"potion_count",
 	"has_seen_potion_tip",
+	"strength_potion_count",
+	"defense_potion_count",
+	"speed_potion_count",
+	"selected_item_id",
+	"has_unlocked_item_slot",
+	"has_seen_use_item_tip",
+	"has_seen_item_switch_tip",
 
 	"max_health_units",
 	"current_health_units",
@@ -122,17 +129,33 @@ func reset_player_runtime_state() -> void:
 	if has_object_property(player, "is_hurt"):
 		player.set("is_hurt", false)
 
+	if has_object_property(player, "is_attacking"):
+		player.set("is_attacking", false)
+
+	if has_object_property(player, "is_shooting_arrow"):
+		player.set("is_shooting_arrow", false)
+
 	if has_object_property(player, "hurt_timer"):
 		player.set("hurt_timer", 0.0)
 
 	if has_object_property(player, "can_control"):
 		player.set("can_control", true)
 
+	if has_object_property(player, "control_enabled"):
+		player.set("control_enabled", true)
+
 	if has_object_property(player, "attack_cooldown"):
 		player.set("attack_cooldown", false)
 
 	if has_object_property(player, "current_base_animation"):
 		player.set("current_base_animation", "")
+	if player.has_method("clear_witcher_buffs"):
+		player.clear_witcher_buffs()
+	if player.has_method("set_control_enabled"):
+		player.set_control_enabled(true)
+
+	if player.has_method("reset_physics_interpolation"):
+		player.reset_physics_interpolation()
 
 
 func reset_runtime_stats() -> void:
@@ -154,8 +177,6 @@ func has_object_property(obj: Object, prop_name: String) -> bool:
 
 
 func call_player_refresh_after_restore() -> void:
-	# Đợi vài frame để Player, HUD, CanvasLayer, label, heart container...
-	# đều kịp chạy _ready().
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -166,16 +187,12 @@ func call_player_refresh_after_restore() -> void:
 	if not is_instance_valid(player):
 		return
 
-	# Ưu tiên hàm chuyên dùng sau khi load.
 	if player.has_method("refresh_after_restore"):
 		player.call("refresh_after_restore")
 
 	if player.has_method("refresh_after_restore_delayed"):
 		player.call("refresh_after_restore_delayed")
 
-	return
-
-	# Các tên hàm dự phòng nếu Player của bạn đang dùng tên khác.
 	if player.has_method("update_hud"):
 		player.call("update_hud")
 
@@ -196,6 +213,13 @@ func call_player_refresh_after_restore() -> void:
 
 	if player.has_method("update_potion_ui"):
 		player.call("update_potion_ui")
+
+	# Cập nhật lại HUD mũi tên sau khi load/respawn.
+	if LevelManager != null and LevelManager.has_signal("arrow_changed"):
+		LevelManager.arrow_changed.emit(
+			LevelManager.has_bow,
+			LevelManager.arrow_count
+		)
 
 
 func force_refresh_player_ui() -> void:

@@ -24,6 +24,10 @@ enum ConfirmMode {
 
 @export var message_font_size: int = 16
 
+# 2 người chơi phải cùng đứng trong InteractionArea của portal.
+@export var coop_required_player_distance: float = 180.0
+@export var coop_required_message: String = "Cả hai cần đứng gần cổng để tiếp tục.\nĐừng bỏ lại đồng đội của mình."
+
 # Hiệu ứng gọi NPC
 @export var call_fade_out_time: float = 1.0
 @export var call_black_hold_time: float = 0.35
@@ -39,6 +43,8 @@ enum ConfirmMode {
 
 var player_in_range: bool = false
 var player: Player = null
+var players_near: Dictionary = {}
+
 var is_busy: bool = false
 var confirm_mode: int = ConfirmMode.CALL_CAMP
 
@@ -65,7 +71,7 @@ var white_rect: ColorRect
 var slam_player: AudioStreamPlayer
 
 var is_final_changing_scene: bool = false
-
+var has_submitted_clear_score: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -110,19 +116,33 @@ func setup_interaction_area() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not player_in_range:
+	if !player_in_range:
 		return
 
 	if is_busy:
 		return
 
-	if event.is_action_pressed(interact_action):
-		try_use_portal()
-		get_viewport().set_input_as_handled()
+	var action_player := get_player_pressed_interact_event(event)
+
+	if action_player == null:
+		return
+
+	player = action_player
+	get_viewport().set_input_as_handled()
+
+	try_use_portal(action_player)
 
 
-func try_use_portal() -> void:
-	if not LevelManager.get_game_flag(required_boss_flag):
+func try_use_portal(action_player: Player = null) -> void:
+	if action_player != null:
+		player = action_player
+
+	if is_two_player_mode():
+		if !can_use_portal_as_team():
+			show_bottom_message(coop_required_message)
+			return
+
+	if !LevelManager.get_game_flag(required_boss_flag):
 		show_bottom_message(locked_message)
 		return
 
@@ -161,13 +181,13 @@ func try_set_player_in_range(target: Node) -> void:
 	if detected_player == null:
 		return
 
+	players_near[detected_player.get_instance_id()] = detected_player
 	player = detected_player
-	player_in_range = true
+	player_in_range = !players_near.is_empty()
 
-	if LevelManager.get_game_flag(required_boss_flag):
-		if talk_indicator != null:
-			talk_indicator.visible = true
-	else:
+	update_talk_indicator()
+
+	if !LevelManager.get_game_flag(required_boss_flag):
 		show_bottom_message(locked_message)
 
 
@@ -177,14 +197,121 @@ func try_remove_player_from_range(target: Node) -> void:
 	if detected_player == null:
 		return
 
-	if detected_player != player:
+	var id: int = detected_player.get_instance_id()
+
+	if players_near.has(id):
+		players_near.erase(id)
+
+	player_in_range = !players_near.is_empty()
+
+	if player == detected_player:
+		player = get_any_near_player()
+
+	update_talk_indicator()
+
+
+func get_any_near_player() -> Player:
+	for key in players_near.keys():
+		var p := players_near[key] as Player
+
+		if p != null and is_instance_valid(p):
+			return p
+
+	return null
+
+
+func update_talk_indicator() -> void:
+	if talk_indicator == null:
 		return
 
-	player = null
-	player_in_range = false
-
-	if talk_indicator != null:
+	if is_busy:
 		talk_indicator.visible = false
+		return
+
+	talk_indicator.visible = player_in_range and LevelManager.get_game_flag(required_boss_flag)
+
+
+func can_use_portal_as_team() -> bool:
+	if !is_two_player_mode():
+		return true
+
+	var player_1 := get_near_player_by_id(1)
+	var player_2 := get_near_player_by_id(2)
+
+	if player_1 == null:
+		return false
+
+	if player_2 == null:
+		return false
+
+	if !is_instance_valid(player_1):
+		return false
+
+	if !is_instance_valid(player_2):
+		return false
+
+	var distance_between_players: float = player_1.global_position.distance_to(player_2.global_position)
+
+	if distance_between_players > coop_required_player_distance:
+		return false
+
+	return true
+
+
+func get_near_player_by_id(target_id: int) -> Player:
+	for key in players_near.keys():
+		var p := players_near[key] as Player
+
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		if get_player_id(p) == target_id:
+			return p
+
+		if target_id == 1 and p.name == "Player":
+			return p
+
+		if target_id == 2 and p.name == "Player2":
+			return p
+
+	return null
+
+
+func get_player_pressed_interact_event(event: InputEvent) -> Player:
+	for key in players_near.keys():
+		var p := players_near[key] as Player
+
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		if p.has_method("is_interact_event_pressed"):
+			if p.is_interact_event_pressed(event):
+				return p
+		else:
+			var action_name := get_interact_action_for_player(p)
+
+			if event.is_action_pressed(action_name):
+				return p
+
+	return null
+
+
+func get_interact_action_for_player(target_player: Player) -> StringName:
+	if !is_two_player_mode():
+		return StringName(interact_action)
+
+	var id_value: int = get_player_id(target_player)
+
+	if id_value == 1:
+		return &"p1_interact"
+
+	return &"p2_interact"
 
 
 # =========================
@@ -217,6 +344,8 @@ func create_message_ui() -> void:
 
 	message_label.add_theme_font_size_override("font_size", message_font_size)
 	message_label.add_theme_color_override("font_color", Color.WHITE)
+	message_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	message_label.add_theme_constant_override("outline_size", 2)
 
 
 func show_bottom_message(text: String) -> void:
@@ -238,7 +367,8 @@ func show_bottom_message(text: String) -> void:
 
 	await message_tween.finished
 
-	message_label.visible = false
+	if message_label != null:
+		message_label.visible = false
 
 
 # =========================
@@ -421,7 +551,7 @@ func show_confirm_ui(title: String, message: String, yes_text: String, no_text: 
 		return
 
 	is_busy = true
-	set_player_control_enabled(false)
+	set_all_players_control_enabled(false)
 
 	if talk_indicator != null:
 		talk_indicator.visible = false
@@ -485,11 +615,10 @@ func _on_no_button_pressed() -> void:
 	await hide_confirm_ui()
 
 	is_busy = false
-	set_player_control_enabled(true)
+	set_all_players_control_enabled(true)
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 
-	if talk_indicator != null and player_in_range:
-		talk_indicator.visible = true
+	update_talk_indicator()
 
 
 func get_safe_text(value: String, fallback: String) -> String:
@@ -511,8 +640,7 @@ func create_effect_ui() -> void:
 	effect_layer.layer = 99999
 	effect_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 
-	# Add thẳng vào root để luôn nằm trên cùng, không bị World/Camera/CanvasLayer khác che.
-	get_tree().root.add_child(effect_layer)
+	add_child(effect_layer)
 
 	effect_root = Control.new()
 	effect_root.name = "EffectRoot"
@@ -564,25 +692,33 @@ func create_effect_ui() -> void:
 
 
 func resize_effect_rects() -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
-
 	if effect_root != null:
-		effect_root.size = viewport_size
+		effect_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+		effect_root.offset_left = 0
+		effect_root.offset_top = 0
+		effect_root.offset_right = 0
+		effect_root.offset_bottom = 0
 
 	if black_rect != null:
-		black_rect.position = Vector2.ZERO
-		black_rect.size = viewport_size
+		black_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		black_rect.offset_left = 0
+		black_rect.offset_top = 0
+		black_rect.offset_right = 0
+		black_rect.offset_bottom = 0
 
 	if white_rect != null:
-		white_rect.position = Vector2.ZERO
-		white_rect.size = viewport_size
+		white_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		white_rect.offset_left = 0
+		white_rect.offset_top = 0
+		white_rect.offset_right = 0
+		white_rect.offset_bottom = 0
 
 
 func play_call_camp_sequence() -> void:
 	print("Map7Portal: Bắt đầu hiệu ứng gọi NPC.")
 
 	is_busy = true
-	set_player_control_enabled(false)
+	set_all_players_control_enabled(false)
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 
 	if talk_indicator != null:
@@ -592,35 +728,29 @@ func play_call_camp_sequence() -> void:
 	set_black_alpha(0.0)
 	set_white_alpha(0.0)
 
-	# Tối dần đến tối hẳn
 	await tween_black_alpha(1.0, call_fade_out_time)
 
-	# Giữ tối một chút
 	await get_tree().create_timer(call_black_hold_time, true).timeout
 
-	# Gọi logic hiện NPC của map_7
 	call_map_7_reveal_rescue_npcs()
 
 	await get_tree().create_timer(0.15, true).timeout
 
-	# Sáng dần lại
 	await tween_black_alpha(0.0, call_fade_in_time)
 
 	is_busy = false
-	set_player_control_enabled(true)
-
-	if talk_indicator != null and player_in_range:
-		talk_indicator.visible = true
+	set_all_players_control_enabled(true)
+	update_talk_indicator()
 
 	print("Map7Portal: Kết thúc hiệu ứng gọi NPC.")
 
 
 func play_final_sequence() -> void:
 	print("Map7Portal: Bắt đầu hiệu ứng kết thúc.")
-
+	finish_run_for_main_menu()
 	is_busy = true
 	is_final_changing_scene = true
-	set_player_control_enabled(false)
+	set_all_players_control_enabled(false)
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 
 	if talk_indicator != null:
@@ -630,20 +760,15 @@ func play_final_sequence() -> void:
 	set_black_alpha(0.0)
 	set_white_alpha(0.0)
 
-	# Đóng băng game, nhưng Effect UI vẫn chạy vì process_mode ALWAYS.
 	get_tree().paused = true
 
-	# Nhạc nhỏ dần rồi dừng hẳn trong 5 giây.
 	if MusicManager.has_method("fade_out"):
-		MusicManager.fade_out(final_light_fade_time, true)
+		MusicManager.fade_out(audio_fade_out_time, true)
 
-	# Toàn màn hình sáng từ từ trong 5 giây.
 	await tween_white_alpha(1.0, final_light_fade_time)
 
-	# Sáng max xong thì phát tiếng sầm.
 	play_slam_sound()
 
-	# Tối thui ngay lập tức.
 	set_white_alpha(0.0)
 	set_black_alpha(1.0)
 
@@ -656,15 +781,13 @@ func play_final_sequence() -> void:
 		clear_final_effect_layer()
 		return
 
-	# Xóa lớp đen/trắng trước khi sang Main Menu,
-	# nếu không Main Menu sẽ bị đen nhưng vẫn bấm được.
 	clear_final_effect_layer()
 
-	# Sang Main Menu xong, sau 3 giây mới bật lại BGM.
 	if MusicManager.has_method("fade_in_after_delay"):
 		MusicManager.fade_in_after_delay(3.0, 2.0)
 
 	get_tree().change_scene_to_file(main_menu_scene_path)
+
 
 func tween_black_alpha(target_alpha: float, duration: float) -> void:
 	if black_rect == null:
@@ -759,10 +882,36 @@ func call_map_7_reveal_rescue_npcs() -> void:
 
 
 # =========================
-# PLAYER
+# PLAYER / CO-OP
 # =========================
 
-func set_player_control_enabled(state: bool) -> void:
+func set_all_players_control_enabled(state: bool) -> void:
+	if is_two_player_mode():
+		for p in get_players():
+			if p == null:
+				continue
+
+			if !is_instance_valid(p):
+				continue
+
+			if p.has_method("set_control_enabled"):
+				p.set_control_enabled(state)
+			elif p.has_method("set_can_control"):
+				p.set_can_control(state)
+
+			if has_object_property(p, "can_control"):
+				p.set("can_control", state)
+
+			if !state and has_object_property(p, "velocity"):
+				var current_velocity: Vector2 = p.get("velocity")
+				current_velocity.x = 0.0
+				p.set("velocity", current_velocity)
+
+			if !state and p.has_method("stop_hurt_box"):
+				p.stop_hurt_box()
+
+		return
+
 	if player == null:
 		player = PlayerManager.player
 
@@ -774,12 +923,103 @@ func set_player_control_enabled(state: bool) -> void:
 	elif player.has_method("set_can_control"):
 		player.set_can_control(state)
 
+	if has_object_property(player, "can_control"):
+		player.set("can_control", state)
+
+
+func get_players() -> Array:
+	var result: Array = []
+	var added_ids: Dictionary = {}
+
+	var groups_to_check: Array[String] = [
+		"players",
+		"player",
+		"Player"
+	]
+
+	for group_name in groups_to_check:
+		for node in get_tree().get_nodes_in_group(group_name):
+			var detected_player := find_player_from_node(node)
+
+			if detected_player == null:
+				continue
+
+			if !is_instance_valid(detected_player):
+				continue
+
+			var id: int = detected_player.get_instance_id()
+
+			if added_ids.has(id):
+				continue
+
+			added_ids[id] = true
+			result.append(detected_player)
+
+	var scene := get_tree().current_scene
+
+	if scene != null:
+		var player_1_node := scene.get_node_or_null("Player")
+		var player_2_node := scene.get_node_or_null("Player2")
+		var world_player_1_node := scene.get_node_or_null("World/Player")
+		var world_player_2_node := scene.get_node_or_null("World/Player2")
+
+		for node in [player_1_node, player_2_node, world_player_1_node, world_player_2_node]:
+			var detected_player := find_player_from_node(node)
+
+			if detected_player == null:
+				continue
+
+			if !is_instance_valid(detected_player):
+				continue
+
+			var id: int = detected_player.get_instance_id()
+
+			if added_ids.has(id):
+				continue
+
+			added_ids[id] = true
+			result.append(detected_player)
+
+	if result.is_empty():
+		if PlayerManager.player != null and PlayerManager.player is Player:
+			result.append(PlayerManager.player)
+
+	return result
+
+
+func get_player_id(target_player: Player) -> int:
+	if target_player == null:
+		return 0
+
+	if has_object_property(target_player, "player_id"):
+		return int(target_player.get("player_id"))
+
+	if target_player.name == "Player":
+		return 1
+
+	if target_player.name == "Player2":
+		return 2
+
+	return 0
+
+
+func is_two_player_mode() -> bool:
+	var game_mode := get_node_or_null("/root/GameMode")
+
+	if game_mode == null:
+		return false
+
+	return game_mode.is_two_players()
+
 
 func find_player_from_node(node: Node) -> Player:
 	var current := node
 
 	while current != null:
 		if current is Player:
+			return current as Player
+
+		if current.is_in_group("players"):
 			return current as Player
 
 		if current.is_in_group("player"):
@@ -791,12 +1031,25 @@ func find_player_from_node(node: Node) -> Player:
 		if current.name == "Player":
 			return current as Player
 
+		if current.name == "Player2":
+			return current as Player
+
 		current = current.get_parent()
 
-	if PlayerManager.player != null and PlayerManager.player is Player:
-		return PlayerManager.player as Player
-
 	return null
+
+
+func has_object_property(obj: Object, prop_name: String) -> bool:
+	if obj == null:
+		return false
+
+	for prop in obj.get_property_list():
+		if String(prop.get("name", "")) == prop_name:
+			return true
+
+	return false
+
+
 func clear_final_effect_layer() -> void:
 	if black_rect != null:
 		set_black_alpha(0.0)
@@ -818,3 +1071,21 @@ func _exit_tree() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 
 	clear_final_effect_layer()
+func finish_run_for_main_menu() -> void:
+	if has_submitted_clear_score:
+		return
+
+	has_submitted_clear_score = true
+
+	var timer := get_node_or_null("/root/GameRunTimer")
+
+	if timer == null:
+		push_warning("Map7Portal: Chưa có Autoload GameRunTimer.")
+		return
+
+	if timer.has_method("finish_run"):
+		timer.finish_run()
+	elif timer.has_method("stop_run"):
+		timer.stop_run()
+	else:
+		push_warning("Map7Portal: GameRunTimer chưa có hàm finish_run() hoặc stop_run().")

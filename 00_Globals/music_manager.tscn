@@ -7,6 +7,7 @@
 
 [node name="MusicManager" type="Node2D" unique_id=131597068]
 script = ExtResource("1_1bpc5")
+game_bgm = ExtResource("1_6ao73")
 map_1_music = ExtResource("2_q88h6")
 
 [node name="BGM" type="AudioStreamPlayer" parent="." unique_id=667608504]

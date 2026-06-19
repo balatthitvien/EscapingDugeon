@@ -4,7 +4,7 @@ extends State
 @onready var idle: State = $"../Idle"
 @onready var jump: State = $"../Jump"
 @onready var attack: State = $"../Attack"
-
+@onready var shoot: State = $"../Shoot" as State
 
 func Enter() -> void:
 	player.update_animation("walk", false)
@@ -41,7 +41,8 @@ func Process(delta: float) -> State:
 func HandleInput(event: InputEvent) -> State:
 	if !player.can_do_action():
 		return null
-
+	if player.is_shoot_arrow_event_pressed(event) and player.can_start_shoot_arrow():
+		return shoot
 	if player.is_attack_event_pressed(event):
 		return attack
 

@@ -21,7 +21,8 @@ extends CharacterBody2D
 
 @export var map_limit_padding: float = 24
 @export var patrol_points: Node
-
+@export var damage_flash_color: Color = Color(1.0, 0.15, 0.15, 1.0)
+@export var damage_flash_time: float = 0.12
 @export var move_speed: float = 50
 @export var chase_speed: float = 65
 @export var random_move_speed: float = 55
@@ -49,10 +50,7 @@ extends CharacterBody2D
 @export var lost_player_grace_time: float = 1.5
 
 
-# =========================
-# PHASE SPEED
-# =========================
-# Khi boss xuống các mốc máu, tốc chạy và tốc đánh sẽ tăng.
+
 @export var speed_multiplier_above_75: float = 1.0
 @export var speed_multiplier_below_75: float = 1.3
 @export var speed_multiplier_below_50: float = 1.5
@@ -71,19 +69,16 @@ var current_phase_speed_multiplier: float = 1.0
 var current_phase_attack_anim_multiplier: float = 1.0
 
 
-# =========================
-# ATTACK FIX
-# =========================
-# Dùng thêm check khoảng cách thủ công để boss vẫn đánh trúng Player
-# kể cả khi Player đứng im sẵn trong vùng đánh.
+
 @export var manual_attack_check_enabled: bool = true
 @export var manual_attack_hit_distance_x: float = 58.0
 @export var manual_attack_hit_distance_y: float = 42.0
 @export var manual_attack_back_tolerance: float = 8.0
 @export var attack_only_hits_facing_direction: bool = true
-
+@export var attack_damage: int = 1
+@export var dash_damage: int = 2
 var is_attack_hurt_box_active: bool = false
-var has_attack_hit_player: bool = false
+var attack_hit_players: Dictionary = {}
 
 
 # DASH
@@ -126,7 +121,7 @@ var right_limit: float = 999999.0
 var point_positions: Array[Vector2] = []
 var current_point_index: int = 0
 var current_target: Vector2
-
+var damage_flash_tween: Tween = null
 var can_play_footstep_sound: bool = true
 
 
@@ -296,6 +291,9 @@ func update_direction_by_target() -> void:
 
 
 func update_direction_to_player() -> void:
+	if player == null or !is_instance_valid(player):
+		player = find_valid_player_in_vision()
+
 	if player == null:
 		player = PlayerManager.player
 
@@ -421,6 +419,9 @@ func update_animation(
 
 
 func get_distance_to_player() -> float:
+	if player == null or !is_instance_valid(player):
+		player = find_valid_player_in_vision()
+
 	if player == null:
 		player = PlayerManager.player
 
@@ -430,19 +431,62 @@ func get_distance_to_player() -> float:
 	return abs(player.global_position.x - global_position.x)
 
 
-func _on_player_entered_vision() -> void:
+func _on_player_entered_vision(detected_player: Player) -> void:
+	if detected_player == null:
+		return
+
+	if !is_instance_valid(detected_player):
+		return
+
+	player = detected_player
 	can_see_player = true
 	lost_player_timer = lost_player_grace_time
 	boss_started.emit()
-	print("Boss thấy Player")
+
+	print("Boss thấy Player: ", detected_player.name)
 
 
-func _on_player_exited_vision() -> void:
+func _on_player_exited_vision(exited_player: Player) -> void:
+	if exited_player == null:
+		return
+
+	if exited_player != player:
+		return
+
+	player = find_valid_player_in_vision()
+
+	if player != null:
+		can_see_player = true
+		lost_player_timer = lost_player_grace_time
+		print("Boss đổi mục tiêu sang Player: ", player.name)
+		return
+
 	can_see_player = false
 	lost_player_timer = lost_player_grace_time
 	print("Boss mất dấu Player")
+func find_valid_player_in_vision() -> Player:
+	if vision_area == null:
+		return null
 
+	for body in vision_area.get_overlapping_bodies():
+		var detected_player := find_player_from_node(body)
 
+		if detected_player != null:
+			return detected_player
+
+	for area in vision_area.get_overlapping_areas():
+		var detected_player := find_player_from_node(area)
+
+		if detected_player != null:
+			return detected_player
+
+		if area.get_parent() != null:
+			detected_player = find_player_from_node(area.get_parent())
+
+			if detected_player != null:
+				return detected_player
+
+	return null
 func _on_hurt_box_area_entered(area: Area2D) -> void:
 	print("Enemy HurtBox area entered")
 
@@ -489,6 +533,8 @@ func take_damage(amount: int) -> void:
 	current_health -= amount
 	current_health = clamp(current_health, 0, max_health)
 
+	play_damage_flash()
+
 	print("Boss HP: ", current_health, "/", max_health)
 
 	update_health_phase()
@@ -522,7 +568,7 @@ func start_attack_hurt_box() -> void:
 	print("BOSS START ATTACK HURT BOX")
 
 	is_attack_hurt_box_active = true
-	has_attack_hit_player = false
+	attack_hit_players.clear()
 
 	attack_hurt_box_collision.disabled = false
 	attack_hurt_box.monitoring = true
@@ -551,6 +597,8 @@ func stop_attack_hurt_box() -> void:
 	print("BOSS STOP ATTACK HURT BOX")
 
 	is_attack_hurt_box_active = false
+	attack_hit_players.clear()
+
 	attack_hurt_box.monitoring = false
 	attack_hurt_box.monitorable = false
 	attack_hurt_box_collision.disabled = true
@@ -573,17 +621,22 @@ func kill_player_from_attack(target: Node) -> void:
 	if attack_hurt_box_collision.disabled:
 		return
 
-	if has_attack_hit_player:
-		return
-
 	var target_player := find_player_from_node(target)
 
 	if target_player == null:
 		print("Không tìm thấy Player từ node: ", target.name)
 		return
 
-	has_attack_hit_player = true
-	kill_player(target_player)
+	if !is_instance_valid(target_player):
+		return
+
+	var id: int = target_player.get_instance_id()
+
+	if attack_hit_players.has(id):
+		return
+
+	attack_hit_players[id] = true
+	damage_player(target_player, attack_damage)
 
 
 func try_manual_attack_hit_player() -> void:
@@ -593,26 +646,116 @@ func try_manual_attack_hit_player() -> void:
 	if !is_attack_hurt_box_active:
 		return
 
-	if has_attack_hit_player:
-		return
+	for target_player in get_all_players():
+		if target_player == null:
+			continue
 
-	if player == null:
-		player = PlayerManager.player
+		if !is_instance_valid(target_player):
+			continue
 
-	if player == null:
-		return
+		if target_player.is_dead:
+			continue
 
-	if !is_instance_valid(player):
-		return
+		var id: int = target_player.get_instance_id()
 
-	if !is_player_inside_manual_attack_range():
-		return
+		if attack_hit_players.has(id):
+			continue
 
-	print("Boss đánh trúng Player bằng manual attack check")
-	has_attack_hit_player = true
-	kill_player(player)
+		if !is_specific_player_inside_manual_attack_range(target_player):
+			continue
 
+		print("Boss đánh trúng Player bằng manual attack check: ", target_player.name)
 
+		attack_hit_players[id] = true
+		damage_player(target_player, attack_damage)
+func get_all_players() -> Array[Player]:
+	var result: Array[Player] = []
+	var added_ids: Dictionary = {}
+
+	var groups_to_check: Array[String] = [
+		"players",
+		"player",
+		"Player"
+	]
+
+	for group_name in groups_to_check:
+		for node in get_tree().get_nodes_in_group(group_name):
+			var detected_player := find_player_from_node(node)
+
+			if detected_player == null:
+				continue
+
+			if !is_instance_valid(detected_player):
+				continue
+
+			var id: int = detected_player.get_instance_id()
+
+			if added_ids.has(id):
+				continue
+
+			added_ids[id] = true
+			result.append(detected_player)
+
+	var player_1_node := get_tree().root.find_child("Player", true, false)
+	var player_2_node := get_tree().root.find_child("Player2", true, false)
+
+	for node in [player_1_node, player_2_node]:
+		var detected_player := find_player_from_node(node)
+
+		if detected_player == null:
+			continue
+
+		if !is_instance_valid(detected_player):
+			continue
+
+		var id: int = detected_player.get_instance_id()
+
+		if added_ids.has(id):
+			continue
+
+		added_ids[id] = true
+		result.append(detected_player)
+
+	return result
+func find_manual_attack_target_player() -> Player:
+	var players := get_all_players()
+
+	for p in players:
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		if p.is_dead:
+			continue
+
+		if is_specific_player_inside_manual_attack_range(p):
+			return p
+
+	return null
+func is_specific_player_inside_manual_attack_range(target_player: Player) -> bool:
+	if target_player == null:
+		return false
+
+	var delta_to_player: Vector2 = target_player.global_position - global_position
+	var dx: float = delta_to_player.x
+	var dy: float = abs(delta_to_player.y)
+
+	if dy > manual_attack_hit_distance_y:
+		return false
+
+	if abs(dx) > manual_attack_hit_distance_x:
+		return false
+
+	if attack_only_hits_facing_direction:
+		if facing_direction > 0 and dx < -manual_attack_back_tolerance:
+			return false
+
+		if facing_direction < 0 and dx > manual_attack_back_tolerance:
+			return false
+
+	return true
 func is_player_inside_manual_attack_range() -> bool:
 	if player == null:
 		return false
@@ -682,7 +825,7 @@ func kill_player_from_dash(target: Node) -> void:
 	if dash_hurt_box_collision.disabled:
 		return
 
-	kill_player(target)
+	damage_player(target, dash_damage)
 
 
 # =========================
@@ -696,15 +839,48 @@ func find_player_from_node(node: Node) -> Player:
 		if current is Player:
 			return current as Player
 
+		if current.is_in_group("players"):
+			return current as Player
+
 		if current.is_in_group("player"):
+			return current as Player
+
+		if current.is_in_group("Player"):
+			return current as Player
+
+		if current.name == "Player":
+			return current as Player
+
+		if current.name == "Player2":
 			return current as Player
 
 		current = current.get_parent()
 
+	if node != null and node.owner != null:
+		var owner_node := node.owner
+
+		if owner_node is Player:
+			return owner_node as Player
+
+		if owner_node.is_in_group("players"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("player"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("Player"):
+			return owner_node as Player
+
+		if owner_node.name == "Player":
+			return owner_node as Player
+
+		if owner_node.name == "Player2":
+			return owner_node as Player
+
 	return null
 
 
-func kill_player(target: Node) -> void:
+func damage_player(target: Node, damage_amount: int) -> void:
 	if target == null:
 		return
 
@@ -714,10 +890,10 @@ func kill_player(target: Node) -> void:
 		print("Không tìm thấy Player từ node: ", target.name)
 		return
 
-	print("Boss đánh trúng Player")
+	print("Boss đánh trúng Player | Damage: ", damage_amount)
 
-	if target_player.has_method("die"):
-		target_player.die(global_position)
+	if target_player.has_method("take_damage"):
+		target_player.take_damage(damage_amount, global_position)
 
 
 # =========================
@@ -767,3 +943,35 @@ func play_footstep_sound() -> void:
 	await get_tree().create_timer(0.16).timeout
 
 	can_play_footstep_sound = true
+func play_damage_flash() -> void:
+	if damage_flash_tween != null:
+		damage_flash_tween.kill()
+
+	set_damage_flash_color(damage_flash_color)
+
+	damage_flash_tween = create_tween()
+	damage_flash_tween.set_parallel(true)
+
+	if sprite_2d != null:
+		damage_flash_tween.tween_property(
+			sprite_2d,
+			"modulate",
+			Color.WHITE,
+			damage_flash_time
+		)
+
+	if dash_sprite_2d != null:
+		damage_flash_tween.tween_property(
+			dash_sprite_2d,
+			"modulate",
+			Color.WHITE,
+			damage_flash_time
+		)
+
+
+func set_damage_flash_color(value: Color) -> void:
+	if sprite_2d != null:
+		sprite_2d.modulate = value
+
+	if dash_sprite_2d != null:
+		dash_sprite_2d.modulate = value

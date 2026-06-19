@@ -15,7 +15,7 @@ extends Node2D
 @export var interact_hint_trigger_distance: float = 65.0
 @export var interact_hint_offset: Vector2 = Vector2(-55, -58)
 @export var interact_hint_font_size: int = 10
-
+@export var coop_spawn_offset_x: float = 18.0
 var player: Player = null
 
 var hint_npcs: Array[Node2D] = []
@@ -26,7 +26,7 @@ var has_connected_player_died: bool = false
 
 func _ready() -> void:
 	MusicManager.stop_boss_music()
-	MusicManager.play_map_1_music()
+	MusicManager.play_map_1_music(1.5, true)
 
 	setup_talk_hint_ui()
 
@@ -159,19 +159,53 @@ func apply_player_spawn_point() -> void:
 	if spawn_name == "":
 		return
 
-	var spawn_point := get_node_or_null("SpawnPoints/" + spawn_name)
+	var spawn_point := find_spawn_point(spawn_name)
 
 	if spawn_point == null:
-		push_warning("Không tìm thấy spawn point: " + spawn_name)
+		push_warning("map_1: Không tìm thấy spawn point: " + spawn_name)
 		LevelManager.clear_next_spawn_point()
 		return
 
-	if PlayerManager.player != null:
-		PlayerManager.player.global_position = spawn_point.global_position
-		PlayerManager.player.velocity = Vector2.ZERO
+	if is_two_player_mode():
+		var players := get_players()
+
+		for p in players:
+			if p == null:
+				continue
+
+			if !is_instance_valid(p):
+				continue
+
+			var offset_x: float = 0.0
+			var player_id_value: int = int(p.get("player_id"))
+
+			if player_id_value == 1:
+				offset_x = -coop_spawn_offset_x
+			else:
+				offset_x = coop_spawn_offset_x
+
+			p.global_position = spawn_point.global_position + Vector2(offset_x, 0.0)
+			p.velocity = Vector2.ZERO
+
+			if p.has_method("set_control_enabled"):
+				p.set_control_enabled(true)
+
+			if p.has_method("reset_physics_interpolation"):
+				p.reset_physics_interpolation()
+
+			print("map_1: Đã đưa ", p.name, " tới spawn point: ", spawn_name, " tại ", p.global_position)
+	else:
+		if PlayerManager.player != null:
+			PlayerManager.player.global_position = spawn_point.global_position
+			PlayerManager.player.velocity = Vector2.ZERO
+
+			if PlayerManager.player.has_method("set_control_enabled"):
+				PlayerManager.player.set_control_enabled(true)
+
+			if PlayerManager.player.has_method("reset_physics_interpolation"):
+				PlayerManager.player.reset_physics_interpolation()
 
 	LevelManager.clear_next_spawn_point()
-
 
 func setup_player_death_handler() -> void:
 	await get_tree().process_frame
@@ -270,15 +304,58 @@ func is_two_player_mode() -> bool:
 
 
 func get_players() -> Array:
-	var players := get_tree().get_nodes_in_group("players")
+	var result: Array = []
+	var added_ids: Dictionary = {}
 
-	if players.is_empty():
-		if player != null:
-			players.append(player)
-		elif PlayerManager.player != null:
-			players.append(PlayerManager.player)
+	var groups_to_check: Array[String] = [
+		"players",
+		"player",
+		"Player"
+	]
 
-	return players
+	for group_name in groups_to_check:
+		for node in get_tree().get_nodes_in_group(group_name):
+			var detected_player := find_player_from_node(node)
+
+			if detected_player == null:
+				continue
+
+			if !is_instance_valid(detected_player):
+				continue
+
+			var id: int = detected_player.get_instance_id()
+
+			if added_ids.has(id):
+				continue
+
+			added_ids[id] = true
+			result.append(detected_player)
+
+	var player_1_node: Node = get_node_or_null("Player")
+	var player_2_node: Node = get_node_or_null("Player2")
+
+	for node in [player_1_node, player_2_node]:
+		var detected_player := find_player_from_node(node)
+
+		if detected_player == null:
+			continue
+
+		if !is_instance_valid(detected_player):
+			continue
+
+		var id: int = detected_player.get_instance_id()
+
+		if added_ids.has(id):
+			continue
+
+		added_ids[id] = true
+		result.append(detected_player)
+
+	if result.is_empty():
+		if PlayerManager.player != null and PlayerManager.player is Player:
+			result.append(PlayerManager.player)
+
+	return result
 
 
 func get_near_player_for_npc(npc: Node2D) -> Player:
@@ -343,3 +420,34 @@ func get_interact_hint_text() -> String:
 		return "P1: Ấn E để nói chuyện\nP2: Ấn Chuột phải để nói chuyện"
 
 	return "Ấn E để nói chuyện"
+
+func find_spawn_point(spawn_name: String) -> Node2D:
+	var spawn_point := get_node_or_null("SpawnPoints/" + spawn_name) as Node2D
+
+	if spawn_point != null:
+		return spawn_point
+
+	spawn_point = get_node_or_null("SpawnPoints2/" + spawn_name) as Node2D
+
+	if spawn_point != null:
+		return spawn_point
+
+	var found_node := find_node_by_name_recursive(self, spawn_name)
+
+	if found_node is Node2D:
+		return found_node as Node2D
+
+	return null
+
+
+func find_node_by_name_recursive(parent: Node, target_name: String) -> Node:
+	if parent.name == target_name:
+		return parent
+
+	for child in parent.get_children():
+		var found := find_node_by_name_recursive(child, target_name)
+
+		if found != null:
+			return found
+
+	return null

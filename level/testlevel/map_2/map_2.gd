@@ -12,7 +12,7 @@ var has_handled_player_death: bool = false
 
 func _ready() -> void:
 	MusicManager.stop_boss_music()
-	MusicManager.play_map_1_music()
+	MusicManager.play_game_bgm(1.5)
 
 	await setup_player_death_handler()
 	await apply_player_spawn_point()
@@ -56,10 +56,20 @@ func apply_player_spawn_point() -> void:
 
 			if p.has_method("set_control_enabled"):
 				p.set_control_enabled(true)
+			if p.has_method("reset_physics_interpolation"):
+				p.reset_physics_interpolation()
 	else:
 		if PlayerManager.player != null:
 			PlayerManager.player.global_position = spawn_point.global_position
 			PlayerManager.player.velocity = Vector2.ZERO
+
+		if PlayerManager.player.has_method("set_control_enabled"):
+			PlayerManager.player.set_control_enabled(true)
+
+		if PlayerManager.player.has_method("reset_physics_interpolation"):
+			PlayerManager.player.reset_physics_interpolation()
+
+	await snap_camera_to_players_now()
 
 	LevelManager.clear_next_spawn_point()
 
@@ -194,17 +204,53 @@ func is_two_player_mode() -> bool:
 
 func get_players() -> Array:
 	var result: Array = []
-	var nodes := get_tree().get_nodes_in_group("players")
+	var added_ids: Dictionary = {}
 
-	for n in nodes:
-		if n == null:
+	var groups_to_check: Array[String] = [
+		"players",
+		"player",
+		"Player"
+	]
+
+	for group_name in groups_to_check:
+		for node in get_tree().get_nodes_in_group(group_name):
+			if node == null:
+				continue
+
+			if !is_instance_valid(node):
+				continue
+
+			if !(node is Player):
+				continue
+
+			var id: int = node.get_instance_id()
+
+			if added_ids.has(id):
+				continue
+
+			added_ids[id] = true
+			result.append(node as Player)
+
+	var player_1_node := get_node_or_null("Player")
+	var player_2_node := get_node_or_null("Player2")
+
+	for node in [player_1_node, player_2_node]:
+		if node == null:
 			continue
 
-		if !is_instance_valid(n):
+		if !is_instance_valid(node):
 			continue
 
-		if n is Player:
-			result.append(n as Player)
+		if !(node is Player):
+			continue
+
+		var id: int = node.get_instance_id()
+
+		if added_ids.has(id):
+			continue
+
+		added_ids[id] = true
+		result.append(node as Player)
 
 	if result.is_empty():
 		if PlayerManager.player != null and PlayerManager.player is Player:
@@ -262,7 +308,7 @@ func get_enemy_nodes() -> Array:
 			if !is_instance_valid(n):
 				continue
 
-			var id := n.get_instance_id()
+			var id: int = n.get_instance_id()
 
 			if added_ids.has(id):
 				continue
@@ -349,3 +395,23 @@ func has_object_property(obj: Object, prop_name: String) -> bool:
 			return true
 
 	return false
+func snap_camera_to_players_now() -> void:
+	await get_tree().process_frame
+	await get_tree().physics_frame
+
+	var shared_camera := get_node_or_null("SharedCamera") as Camera2D
+
+	if shared_camera == null:
+		shared_camera = get_node_or_null("Camera2D") as Camera2D
+
+	if shared_camera == null:
+		shared_camera = find_node_by_name_recursive(self, "SharedCamera") as Camera2D
+
+	if shared_camera == null:
+		shared_camera = find_node_by_name_recursive(self, "Camera2D") as Camera2D
+
+	if shared_camera != null:
+		if shared_camera.has_method("force_snap_to_players"):
+			await shared_camera.force_snap_to_players()
+		else:
+			shared_camera.reset_smoothing()

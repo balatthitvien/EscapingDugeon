@@ -427,7 +427,7 @@ monitorable = true
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="VisionArea" unique_id=1217939099]
 position = Vector2(-113, -67)
-polygon = PackedVector2Array(109, 28, 259, 26, 261, 84, 109, 85)
+polygon = PackedVector2Array(-14, 28, 259, 26, 261, 84, -14, 84)
 
 [node name="AttackHurtBox" type="Area2D" parent="." unique_id=1371207084]
 position = Vector2(-22, 16)

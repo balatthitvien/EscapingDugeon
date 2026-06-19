@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bqpmbwndlrikf"
+path="res://.godot/imported/buy.mp3-5e28f187fdb8c632dae6db56407a8009.mp3str"
+
+[deps]
+
+source_file="res://NPC/NPC - Shop/Sprites/buy.mp3"
+dest_files=["res://.godot/imported/buy.mp3-5e28f187fdb8c632dae6db56407a8009.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

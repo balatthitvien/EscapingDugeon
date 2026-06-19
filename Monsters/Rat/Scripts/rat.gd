@@ -371,8 +371,11 @@ func start_attack_hurt_box() -> void:
 
 
 func stop_attack_hurt_box() -> void:
-	attack_hurt_box.monitoring = false
-	attack_hurt_box_collision.disabled = true
+	if attack_hurt_box != null:
+		attack_hurt_box.set_deferred("monitoring", false)
+
+	if attack_hurt_box_collision != null:
+		attack_hurt_box_collision.set_deferred("disabled", true)
 
 
 func _on_attack_hurt_box_body_entered(body: Node2D) -> void:
@@ -484,13 +487,19 @@ func start_die() -> void:
 	stop_attack_hurt_box()
 
 	if collision_shape:
-		collision_shape.disabled = true
+		collision_shape.set_deferred("disabled", true)
 
 	if hit_box:
-		hit_box.monitoring = false
+		hit_box.set_deferred("monitoring", false)
+
+	if hit_box_collision:
+		hit_box_collision.set_deferred("disabled", true)
 
 	if attack_hurt_box:
-		attack_hurt_box.monitoring = false
+		attack_hurt_box.set_deferred("monitoring", false)
+
+	if attack_hurt_box_collision:
+		attack_hurt_box_collision.set_deferred("disabled", true)
 
 	play_die_sound()
 	play_animation("die", true)

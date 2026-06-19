@@ -236,13 +236,16 @@ func open_shop_ui() -> void:
 	if shop_ui.has_signal("closed") and not shop_ui.closed.is_connected(_on_shop_ui_closed):
 		shop_ui.closed.connect(_on_shop_ui_closed)
 
+	# THÊM Ở ĐÂY
+	if shop_ui.has_method("set_shop_owner"):
+		shop_ui.set_shop_owner(self)
+
 	if shop_ui.has_method("open_shop"):
 		shop_ui.open_shop(get_shop_stats_player())
 	else:
 		push_warning("ShopUI chưa có hàm open_shop().")
 		set_all_players_control_enabled(true)
 		end_dialog()
-
 
 func _on_shop_ui_closed() -> void:
 	set_all_players_control_enabled(true)

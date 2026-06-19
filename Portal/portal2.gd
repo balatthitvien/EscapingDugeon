@@ -431,7 +431,7 @@ func _on_yes_button_pressed() -> void:
 
 	if talk_indicator != null:
 		talk_indicator.visible = false
-
+	finish_run_for_main_menu()
 	if FinalExitTransition.has_method("play_to_main_menu"):
 		FinalExitTransition.play_to_main_menu(
 			main_menu_scene_path,
@@ -465,7 +465,7 @@ func create_effect_ui() -> void:
 	effect_layer.layer = 99999
 	effect_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 
-	get_tree().root.add_child(effect_layer)
+	add_child(effect_layer)
 
 	effect_root = Control.new()
 	effect_root.name = "EffectRoot"
@@ -515,19 +515,26 @@ func create_effect_ui() -> void:
 
 
 func resize_effect_rects() -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
-
 	if effect_root != null:
-		effect_root.position = Vector2.ZERO
-		effect_root.size = viewport_size
+		effect_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+		effect_root.offset_left = 0
+		effect_root.offset_top = 0
+		effect_root.offset_right = 0
+		effect_root.offset_bottom = 0
 
 	if black_rect != null:
-		black_rect.position = Vector2.ZERO
-		black_rect.size = viewport_size
+		black_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		black_rect.offset_left = 0
+		black_rect.offset_top = 0
+		black_rect.offset_right = 0
+		black_rect.offset_bottom = 0
 
 	if white_rect != null:
-		white_rect.position = Vector2.ZERO
-		white_rect.size = viewport_size
+		white_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		white_rect.offset_left = 0
+		white_rect.offset_top = 0
+		white_rect.offset_right = 0
+		white_rect.offset_bottom = 0
 
 
 func play_final_sequence() -> void:
@@ -700,3 +707,16 @@ func find_first_area_2d(root: Node) -> Area2D:
 
 func _exit_tree() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+func finish_run_for_main_menu() -> void:
+	var timer := get_node_or_null("/root/GameRunTimer")
+
+	if timer == null:
+		push_warning("BossExitPortal: Chưa có Autoload GameRunTimer.")
+		return
+
+	if timer.has_method("finish_run"):
+		timer.finish_run()
+	elif timer.has_method("stop_run"):
+		timer.stop_run()
+	else:
+		push_warning("BossExitPortal: GameRunTimer chưa có hàm finish_run() hoặc stop_run().")

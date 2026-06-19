@@ -154,10 +154,12 @@ func is_loop_valid(token: int) -> bool:
 
 
 func get_valid_detected_player() -> Player:
-	if not use_vision:
-		return PlayerManager.player as Player
+	var detected_player: Player = null
 
-	var detected_player: Player = get_player_from_vision_area()
+	if not use_vision:
+		detected_player = get_nearest_valid_player()
+	else:
+		detected_player = get_player_from_vision_area()
 
 	if detected_player == null:
 		return null
@@ -168,12 +170,79 @@ func get_valid_detected_player() -> Player:
 	if detected_player.is_dead:
 		return null
 
-	if not is_player_in_front(detected_player):
-		return null
+	if use_vision:
+		if not is_player_in_front(detected_player):
+			return null
 
 	return detected_player
 
+func get_nearest_valid_player() -> Player:
+	var nearest_player: Player = null
+	var nearest_distance: float = 999999.0
 
+	var groups_to_check: Array[String] = [
+		"players",
+		"player",
+		"Player"
+	]
+
+	var added_ids: Dictionary = {}
+
+	for group_name in groups_to_check:
+		for node in get_tree().get_nodes_in_group(group_name):
+			var detected_player := find_player_from_node(node)
+
+			if detected_player == null:
+				continue
+
+			if !is_instance_valid(detected_player):
+				continue
+
+			if detected_player.is_dead:
+				continue
+
+			var id := detected_player.get_instance_id()
+
+			if added_ids.has(id):
+				continue
+
+			added_ids[id] = true
+
+			var distance: float = global_position.distance_to(detected_player.global_position)
+
+			if distance < nearest_distance:
+				nearest_distance = distance
+				nearest_player = detected_player
+
+	var player_1_node := get_tree().root.find_child("Player", true, false)
+	var player_2_node := get_tree().root.find_child("Player2", true, false)
+
+	for node in [player_1_node, player_2_node]:
+		var detected_player := find_player_from_node(node)
+
+		if detected_player == null:
+			continue
+
+		if !is_instance_valid(detected_player):
+			continue
+
+		if detected_player.is_dead:
+			continue
+
+		var id := detected_player.get_instance_id()
+
+		if added_ids.has(id):
+			continue
+
+		added_ids[id] = true
+
+		var distance: float = global_position.distance_to(detected_player.global_position)
+
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest_player = detected_player
+
+	return nearest_player
 func is_player_in_front(target_player: Player) -> bool:
 	if target_player == null:
 		return false
@@ -270,17 +339,22 @@ func get_player_from_vision_area() -> Player:
 	for area in vision_area.get_overlapping_areas():
 		var detected_player: Player = find_player_from_node(area)
 
+		if detected_player == null and area.get_parent() != null:
+			detected_player = find_player_from_node(area.get_parent())
+
 		if detected_player != null:
 			return detected_player
 
 	return null
-
 
 func find_player_from_node(node: Node) -> Player:
 	var current := node
 
 	while current != null:
 		if current is Player:
+			return current as Player
+
+		if current.is_in_group("players"):
 			return current as Player
 
 		if current.is_in_group("player"):
@@ -292,9 +366,30 @@ func find_player_from_node(node: Node) -> Player:
 		if current.name == "Player":
 			return current as Player
 
+		if current.name == "Player2":
+			return current as Player
+
 		current = current.get_parent()
 
-	if PlayerManager.player != null and PlayerManager.player is Player:
-		return PlayerManager.player as Player
+	if node != null and node.owner != null:
+		var owner_node := node.owner
+
+		if owner_node is Player:
+			return owner_node as Player
+
+		if owner_node.is_in_group("players"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("player"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("Player"):
+			return owner_node as Player
+
+		if owner_node.name == "Player":
+			return owner_node as Player
+
+		if owner_node.name == "Player2":
+			return owner_node as Player
 
 	return null

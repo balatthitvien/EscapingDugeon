@@ -58,6 +58,8 @@ func show_you_died() -> void:
 
 	print("SHOW YOU DIED UI")
 
+	set_all_players_control_enabled(false)
+
 	visible = true
 	layer = 100
 	can_click_respawn = false
@@ -116,6 +118,10 @@ func _input(event: InputEvent) -> void:
 
 			get_viewport().set_input_as_handled()
 
+			set_all_players_control_enabled(false)
+
+			# Vì bạn dùng chung máu / EXP / coin / bình máu,
+			# chỉ cần lưu stats từ PlayerManager.player.
 			PlayerManager.prepare_respawn_stats()
 
 			await hide_you_died_ui()
@@ -133,6 +139,7 @@ func _input(event: InputEvent) -> void:
 				1.0,
 				0.8
 			)
+
 
 func hide_you_died_ui() -> void:
 	if tween:
@@ -157,3 +164,59 @@ func hide_you_died_ui() -> void:
 	await tween.finished
 
 	visible = false
+	is_showing_you_died = false
+
+
+func set_all_players_control_enabled(state: bool) -> void:
+	if is_two_player_mode():
+		var players := get_tree().get_nodes_in_group("players")
+
+		for p in players:
+			if p == null:
+				continue
+
+			if !is_instance_valid(p):
+				continue
+
+			if p.has_method("set_control_enabled"):
+				p.set_control_enabled(state)
+
+			if has_object_property(p, "can_control"):
+				p.set("can_control", state)
+
+			if !state and has_object_property(p, "velocity"):
+				var current_velocity: Vector2 = p.get("velocity")
+				current_velocity.x = 0.0
+				p.set("velocity", current_velocity)
+
+			if !state and p.has_method("stop_hurt_box"):
+				p.stop_hurt_box()
+
+		return
+
+	if PlayerManager.player != null and is_instance_valid(PlayerManager.player):
+		if PlayerManager.player.has_method("set_control_enabled"):
+			PlayerManager.player.set_control_enabled(state)
+
+		if has_object_property(PlayerManager.player, "can_control"):
+			PlayerManager.player.set("can_control", state)
+
+
+func is_two_player_mode() -> bool:
+	var game_mode := get_node_or_null("/root/GameMode")
+
+	if game_mode == null:
+		return false
+
+	return game_mode.is_two_players()
+
+
+func has_object_property(obj: Object, prop_name: String) -> bool:
+	if obj == null:
+		return false
+
+	for prop in obj.get_property_list():
+		if String(prop.get("name", "")) == prop_name:
+			return true
+
+	return false

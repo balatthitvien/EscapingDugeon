@@ -4,8 +4,10 @@
 [ext_resource type="Texture2D" uid="uid://cgbk71ccahmcg" path="res://tileset/Finish.png" id="1_vklwu"]
 [ext_resource type="Texture2D" uid="uid://dfdc2x7woeqy7" path="res://tileset/Lava World Tileset.png" id="2_au5t6"]
 [ext_resource type="Texture2D" uid="uid://dwnkegrtvse63" path="res://tileset/main_lev_buildB.png" id="3_36ui0"]
+[ext_resource type="Texture2D" uid="uid://b7xxjfy57s8of" path="res://Player/Sprite/P1.png" id="4_eokd8"]
 [ext_resource type="Texture2D" uid="uid://b7g0xn6ewumxn" path="res://tileset/other_and_decorative.png" id="4_uheot"]
 [ext_resource type="Texture2D" uid="uid://beapq7e2rd38d" path="res://tileset/main_lev_build.png" id="5_1j11o"]
+[ext_resource type="Texture2D" uid="uid://hbdb1putwakr" path="res://Player/Sprite/P2.png" id="5_87rc4"]
 [ext_resource type="Texture2D" uid="uid://bg22nax8jdmoj" path="res://tileset/caslePropsSheet.png" id="7_wvo6h"]
 [ext_resource type="Texture2D" uid="uid://di243qp5hb3ej" path="res://tileset/castle_tileset.png" id="9_2lbim"]
 [ext_resource type="PackedScene" uid="uid://c1kpt4mmiitni" path="res://Things/Flag/Flag.tscn" id="9_j3tsg"]
@@ -18,6 +20,8 @@
 [ext_resource type="PackedScene" uid="uid://b6tdirwapb4pl" path="res://00_Globals/you_died_ui.tscn" id="14_3fpag"]
 [ext_resource type="PackedScene" uid="uid://be5iph5libhbw" path="res://CampFire/camp_fire.tscn" id="15_3fpag"]
 [ext_resource type="PackedScene" uid="uid://buyt48x7f6r2t" path="res://Monsters/SlimeBoss/slime_boss.tscn" id="16_wvo6h"]
+[ext_resource type="Script" uid="uid://y6tobysm1hmr" path="res://level/testlevel/shared_camera.gd" id="19_hewyj"]
+[ext_resource type="AudioStream" uid="uid://domo3wv75k8gf" path="res://level/testlevel/map_6/Fighting Action No Copyright Music(Action Background Music) - DrumsPercussion [No Copyright-Free].mp3" id="22_87rc4"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j3tsg"]
 texture = ExtResource("1_vklwu")
@@ -9015,16 +9019,36 @@ size = Vector2(80, 60)
 [node name="map_6" type="Node2D" unique_id=1015510681]
 script = ExtResource("1_2lbim")
 
+[node name="SlimeBossMusic" type="AudioStreamPlayer" parent="." unique_id=829437043]
+stream = ExtResource("22_87rc4")
+bus = &"Music"
+
 [node name="SlimeBoss" parent="." unique_id=1251467678 instance=ExtResource("16_wvo6h")]
 z_index = 10
 position = Vector2(898, 49)
-damage = 2
 
 [node name="Player" parent="." unique_id=800388650 instance=ExtResource("11_au5t6")]
 z_index = 10
 position = Vector2(81, 126)
+player_1_marker_texture = ExtResource("4_eokd8")
+player_2_marker_texture = ExtResource("5_87rc4")
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=1764731377]
+limit_left = -60
+limit_top = -805
+limit_right = 2300
+limit_bottom = 165
+drag_left_margin = 0.0
+drag_top_margin = 0.0
+drag_right_margin = 0.0
+drag_bottom_margin = 0.0
+
+[node name="Player2" parent="." unique_id=1755282092 instance=ExtResource("11_au5t6")]
+z_index = 10
+position = Vector2(81, 126)
+player_id = 2
+
+[node name="Camera2D" type="Camera2D" parent="Player2" unique_id=2099591811]
 limit_left = -60
 limit_top = -805
 limit_right = 2300
@@ -9107,6 +9131,9 @@ position = Vector2(80, 109)
 [node name="FromMap7" type="Marker2D" parent="SpawnPoints" unique_id=2048597235]
 position = Vector2(1870, -125)
 
+[node name="CampFireSpawn" type="Marker2D" parent="SpawnPoints" unique_id=2080565771]
+position = Vector2(154, 2)
+
 [node name="DoorToMap3" type="Area2D" parent="." unique_id=7403195]
 z_index = 10
 position = Vector2(48, 103)
@@ -9159,3 +9186,13 @@ shape = SubResource("RectangleShape2D_2lbim")
 [node name="TalkIndicator" type="Sprite2D" parent="LockedDoorToNextArea" unique_id=1901221653]
 position = Vector2(9, -48)
 texture = ExtResource("12_uheot")
+
+[node name="SharedCamera" type="Camera2D" parent="." unique_id=597831771]
+limit_left = 0
+limit_top = -220
+limit_right = 1095
+limit_bottom = 50
+script = ExtResource("19_hewyj")
+min_zoom = Vector2(0.45, 1.5)
+horizontal_margin = 360.0
+vertical_margin = 150.0

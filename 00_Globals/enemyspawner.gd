@@ -8,7 +8,7 @@ extends Node2D
 @export var coin_drop_random_x: float = 12.0
 @export var coin_drop_y_offset: float = -6.0
 @export var set_flag_on_enemy_die: String = ""
-
+@export var spawned_enemy_unique_id: String = ""
 var current_enemy: Node = null
 var is_respawning: bool = false
 
@@ -35,7 +35,11 @@ func spawn_enemy() -> void:
 	if current_enemy == null:
 		push_warning(name + " không instantiate được Enemy Scene.")
 		return
-
+	if spawned_enemy_unique_id != "":
+		if has_object_property(current_enemy, "mimic_id"):
+			current_enemy.set("mimic_id", spawned_enemy_unique_id)
+		elif has_object_property(current_enemy, "enemy_id"):
+			current_enemy.set("enemy_id", spawned_enemy_unique_id)
 	# Set vị trí trước khi add_child để _ready() của quái lấy đúng PatrolPoints.
 	if current_enemy is Node2D:
 		if spawn_parent is Node2D:
@@ -53,12 +57,20 @@ func spawn_enemy() -> void:
 	else:
 		push_warning(str(current_enemy.name) + " chưa có signal enemy_died.")
 
+func has_object_property(obj: Object, prop_name: String) -> bool:
+	if obj == null:
+		return false
 
+	for prop in obj.get_property_list():
+		if String(prop.get("name", "")) == prop_name:
+			return true
+
+	return false
 func _on_enemy_died(death_position: Vector2) -> void:
 	if set_flag_on_enemy_die != "":
 		LevelManager.set_game_flag(set_flag_on_enemy_die, true)
 
-	drop_coins(death_position)
+	call_deferred("drop_coins", death_position)
 	start_respawn_timer()
 
 
@@ -91,7 +103,7 @@ func drop_coins(death_position: Vector2) -> void:
 			else:
 				coin.position = drop_global_position
 
-		spawn_parent.add_child(coin)
+		spawn_parent.call_deferred("add_child", coin)
 
 
 func start_respawn_timer() -> void:

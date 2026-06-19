@@ -36,7 +36,7 @@ theme_override_constants/separation = 20
 [node name="TitleLabel" type="Label" parent="VBoxContainer" unique_id=862952035]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_3w4mj")
-text = "ESCAPING DUGEON"
+text = "ESCAPING DUNGEON"
 horizontal_alignment = 1
 
 [node name="PlayButton" type="Button" parent="VBoxContainer" unique_id=1435026273]
@@ -50,6 +50,11 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("2_3w4mj")
 text = "2 PLAYER
 "
+
+[node name="LeaderboardButton" type="Button" parent="VBoxContainer" unique_id=1581938180]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_3w4mj")
+text = "LEADERBOARD"
 
 [node name="LoadButton" type="Button" parent="VBoxContainer" unique_id=477392143]
 layout_mode = 2

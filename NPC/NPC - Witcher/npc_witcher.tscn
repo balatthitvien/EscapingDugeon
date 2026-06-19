@@ -5,6 +5,11 @@
 [ext_resource type="Texture2D" uid="uid://jrwbmguppepa" path="res://NPC/NPC - BlackSmith/Sprites/npc- tam giac.png" id="2_6thxb"]
 [ext_resource type="Texture2D" uid="uid://c4amol8fiahsq" path="res://Player/Sprite/avatar1.png" id="2_lp7yi"]
 [ext_resource type="Texture2D" uid="uid://daubyeg4eqfh6" path="res://NPC/NPC - Witcher/Sprites/avatar - npc4.png" id="3_giyg5"]
+[ext_resource type="Script" uid="uid://b55streu3thjt" path="res://NPC/NPC - Witcher/witcher_shop_ui.gd" id="6_giyg5"]
+[ext_resource type="Texture2D" uid="uid://co43ppx03e7my" path="res://NPC/NPC - Witcher/Sprites/potion-damage.png" id="7_ducxk"]
+[ext_resource type="Texture2D" uid="uid://h3v38anqvtc8" path="res://NPC/NPC - Witcher/Sprites/potion-defense.png" id="8_pfbsl"]
+[ext_resource type="Texture2D" uid="uid://bgxwjvf5giy7n" path="res://NPC/NPC - Witcher/Sprites/potion-speed.png" id="9_7m24r"]
+[ext_resource type="AudioStream" uid="uid://bqpmbwndlrikf" path="res://NPC/NPC - Shop/Sprites/buy.mp3" id="10_pfbsl"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e3nbr"]
 height = 36.0
@@ -121,3 +126,12 @@ texture = ExtResource("2_6thxb")
 
 [node name="TalkHintPoint" type="Marker2D" parent="." unique_id=1122983865]
 position = Vector2(-1, -15)
+
+[node name="WitcherShopUI" type="CanvasLayer" parent="." unique_id=2076531751]
+script = ExtResource("6_giyg5")
+strength_texture = ExtResource("7_ducxk")
+defense_texture = ExtResource("8_pfbsl")
+speed_texture = ExtResource("9_7m24r")
+
+[node name="BuySuccessSound" type="AudioStreamPlayer" parent="WitcherShopUI" unique_id=800815607]
+stream = ExtResource("10_pfbsl")

@@ -31,6 +31,7 @@ var has_started_intro: bool = false
 
 
 func _ready() -> void:
+	MusicManager.play_game_bgm(1.5)
 	print("TestLevel ready")
 
 	create_tutorial_hint_ui()

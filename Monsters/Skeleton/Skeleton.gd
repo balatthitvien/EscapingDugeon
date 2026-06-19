@@ -74,6 +74,7 @@ const GRAVITY: float = 1000.0
 @export var wall_normal_min_x: float = 0.4
 @export var ignore_player_after_wall_time: float = 1.0
 @export var hurt_stun_cooldown_time: float = 3.0
+@export var defeated_flag_name: String = ""
 var current_state: SkeletonState = SkeletonState.IDLE
 var hp: int = 0
 var facing_direction: int = 1
@@ -93,7 +94,7 @@ var combat_memory_timer: float = 0.0
 var walk_sound_timer: float = 0.0
 
 var is_attack_active: bool = false
-var has_hit_player_this_attack: bool = false
+var hit_players_this_attack: Dictionary = {}
 var has_given_exp: bool = false
 var state_token: int = 0
 
@@ -565,8 +566,8 @@ func can_counter_attack_player() -> bool:
 	return true
 
 
-func is_position_in_front(position: Vector2) -> bool:
-	var dx: float = position.x - global_position.x
+func is_position_in_front(target_position: Vector2) -> bool:
+	var dx: float = target_position.x - global_position.x
 
 	if absf(dx) <= 2.0:
 		return true
@@ -654,18 +655,25 @@ func start_attack_hurt_box() -> void:
 		attack_sound.play()
 
 	is_attack_active = true
-	has_hit_player_this_attack = false
+	hit_players_this_attack.clear()
 
 	if attack_collision != null:
-		attack_collision.disabled = false
+		attack_collision.set_deferred("disabled", false)
 
 	if attack_hurt_box != null:
-		attack_hurt_box.monitoring = true
-		attack_hurt_box.monitorable = true
+		attack_hurt_box.set_deferred("monitoring", true)
+		attack_hurt_box.set_deferred("monitorable", true)
 
+	await get_tree().physics_frame
 	await get_tree().physics_frame
 
 	if current_state != SkeletonState.ATTACK:
+		return
+
+	if attack_hurt_box == null:
+		return
+
+	if attack_collision != null and attack_collision.disabled:
 		return
 
 	for body in attack_hurt_box.get_overlapping_bodies():
@@ -677,20 +685,17 @@ func start_attack_hurt_box() -> void:
 
 func stop_attack_hurt_box() -> void:
 	is_attack_active = false
-	has_hit_player_this_attack = false
+	hit_players_this_attack.clear()
 
 	if attack_collision != null:
-		attack_collision.disabled = true
+		attack_collision.set_deferred("disabled", true)
 
 	if attack_hurt_box != null:
-		attack_hurt_box.monitoring = false
+		attack_hurt_box.set_deferred("monitoring", false)
 
 
 func try_hit_player(target: Node) -> void:
 	if not is_attack_active:
-		return
-
-	if has_hit_player_this_attack:
 		return
 
 	var detected_player: Player = find_player_from_node(target)
@@ -698,13 +703,25 @@ func try_hit_player(target: Node) -> void:
 	if detected_player == null:
 		return
 
-	has_hit_player_this_attack = true
+	if !is_instance_valid(detected_player):
+		return
+
+	if detected_player.is_dead:
+		return
+
+	var id: int = detected_player.get_instance_id()
+
+	if hit_players_this_attack.has(id):
+		return
+
+	hit_players_this_attack[id] = true
+
+	print("Skeleton đánh trúng Player: ", detected_player.name)
 
 	if detected_player.has_method("take_damage"):
 		detected_player.take_damage(attack_damage, global_position)
 	elif detected_player.has_method("die"):
 		detected_player.die(global_position)
-
 
 func receive_player_hit(damage: int, attacker_position: Vector2) -> void:
 	if current_state == SkeletonState.DIE:
@@ -794,6 +811,8 @@ func take_damage(damage: int, attacker_position: Vector2) -> void:
 
 func start_die(my_token: int) -> void:
 	give_exp_reward()
+	if defeated_flag_name != "":
+		LevelManager.set_game_flag(defeated_flag_name, true)
 	if enemy_health_bar != null:
 		enemy_health_bar.visible = false
 	stop_attack_hurt_box()

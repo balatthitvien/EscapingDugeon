@@ -155,12 +155,79 @@ func get_fire_volume_by_distance() -> float:
 
 
 func get_player_for_sound() -> Node2D:
+	var nearest_player: Node2D = null
+	var nearest_distance: float = 999999.0
+
+	for p in get_all_players():
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		var distance: float = global_position.distance_to(p.global_position)
+
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest_player = p
+
+	if nearest_player != null:
+		return nearest_player
+
 	if PlayerManager.player != null and is_instance_valid(PlayerManager.player):
 		if PlayerManager.player is Node2D:
 			return PlayerManager.player as Node2D
 
 	return null
+func get_all_players() -> Array:
+	var result: Array = []
+	var added_ids: Dictionary = {}
 
+	var groups_to_check: Array[String] = [
+		"players",
+		"player",
+		"Player"
+	]
+
+	for group_name in groups_to_check:
+		for node in get_tree().get_nodes_in_group(group_name):
+			var detected_player := find_player_from_node(node)
+
+			if detected_player == null:
+				continue
+
+			if !is_instance_valid(detected_player):
+				continue
+
+			var id := detected_player.get_instance_id()
+
+			if added_ids.has(id):
+				continue
+
+			added_ids[id] = true
+			result.append(detected_player)
+
+	var player_1_node := get_tree().root.find_child("Player", true, false)
+	var player_2_node := get_tree().root.find_child("Player2", true, false)
+
+	for node in [player_1_node, player_2_node]:
+		var detected_player := find_player_from_node(node)
+
+		if detected_player == null:
+			continue
+
+		if !is_instance_valid(detected_player):
+			continue
+
+		var id := detected_player.get_instance_id()
+
+		if added_ids.has(id):
+			continue
+
+		added_ids[id] = true
+		result.append(detected_player)
+
+	return result
 
 func _on_animation_finished(anim_name: StringName) -> void:
 	if anim_name == fire_animation_name:
@@ -201,6 +268,9 @@ func find_player_from_node(node: Node) -> Player:
 		if current is Player:
 			return current as Player
 
+		if current.is_in_group("players"):
+			return current as Player
+
 		if current.is_in_group("player"):
 			return current as Player
 
@@ -210,9 +280,30 @@ func find_player_from_node(node: Node) -> Player:
 		if current.name == "Player":
 			return current as Player
 
+		if current.name == "Player2":
+			return current as Player
+
 		current = current.get_parent()
 
-	if PlayerManager.player != null and PlayerManager.player is Player:
-		return PlayerManager.player as Player
+	if node != null and node.owner != null:
+		var owner_node := node.owner
+
+		if owner_node is Player:
+			return owner_node as Player
+
+		if owner_node.is_in_group("players"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("player"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("Player"):
+			return owner_node as Player
+
+		if owner_node.name == "Player":
+			return owner_node as Player
+
+		if owner_node.name == "Player2":
+			return owner_node as Player
 
 	return null

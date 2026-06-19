@@ -45,7 +45,8 @@ const GRAVITY: float = 1000.0
 @export var max_health: int = 5
 @export var damage: int = 1
 @export var exp_reward: int = 3
-
+@export var attack_lunge_speed: float = 145.0
+@export var attack_lunge_time: float = 0.12
 @export var hidden_sprite_scale: Vector2 = Vector2(0.78, 0.78)
 @export var normal_sprite_scale: Vector2 = Vector2.ONE
 
@@ -85,9 +86,10 @@ var facing_direction: int = 1
 var is_transformed: bool = false
 var is_dead: bool = false
 var is_attack_active: bool = false
-var has_hit_player_this_attack: bool = false
+var hit_players_this_attack: Dictionary = {}
 var has_given_exp: bool = false
-
+var is_attack_lunging: bool = false
+var attack_lunge_timer: float = 0.0
 var patrol_left_x: float = 0.0
 var patrol_right_x: float = 0.0
 var patrol_target_x: float = 0.0
@@ -315,6 +317,9 @@ func open_mimic_chest(opening_player: Player = null) -> void:
 
 	enable_enemy_parts(true)
 
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
 	if player == null or !is_instance_valid(player):
 		find_valid_player_in_vision()
 
@@ -334,11 +339,11 @@ func open_mimic_chest(opening_player: Player = null) -> void:
 
 func enable_interaction(value: bool) -> void:
 	if interact_area != null:
-		interact_area.monitoring = value
-		interact_area.monitorable = value
+		interact_area.set_deferred("monitoring", value)
+		interact_area.set_deferred("monitorable", value)
 
 	if interact_collision != null:
-		interact_collision.disabled = not value
+		interact_collision.set_deferred("disabled", !value)
 
 	if not value and talk_indicator != null:
 		talk_indicator.visible = false
@@ -346,25 +351,25 @@ func enable_interaction(value: bool) -> void:
 
 func enable_enemy_parts(value: bool) -> void:
 	if hit_box != null:
-		hit_box.monitoring = value
-		hit_box.monitorable = value
+		hit_box.set_deferred("monitoring", value)
+		hit_box.set_deferred("monitorable", value)
 
 	if vision_area != null:
-		vision_area.monitoring = value
-		vision_area.monitorable = value
+		vision_area.set_deferred("monitoring", value)
+		vision_area.set_deferred("monitorable", value)
 
 	if hit_box_collision != null:
-		hit_box_collision.disabled = not value
+		hit_box_collision.set_deferred("disabled", !value)
 
 	if value:
 		stop_attack_hurt_box()
 	else:
 		if attack_hurt_box != null:
-			attack_hurt_box.monitoring = false
-			attack_hurt_box.monitorable = false
+			attack_hurt_box.set_deferred("monitoring", false)
+			attack_hurt_box.set_deferred("monitorable", false)
 
 		if attack_hurt_box_collision != null:
-			attack_hurt_box_collision.disabled = true
+			attack_hurt_box_collision.set_deferred("disabled", true)
 
 
 func update_timers(delta: float) -> void:
@@ -455,7 +460,17 @@ func process_chase(_delta: float) -> void:
 	velocity.x = facing_direction * chase_speed
 	play_animation("walk")
 
-func process_attack(_delta: float) -> void:
+func process_attack(delta: float) -> void:
+	if is_attack_lunging:
+		attack_lunge_timer -= delta
+		velocity.x = facing_direction * attack_lunge_speed
+
+		if attack_lunge_timer <= 0.0:
+			is_attack_lunging = false
+			velocity.x = 0.0
+
+		return
+
 	velocity.x = 0.0
 
 
@@ -507,28 +522,49 @@ func change_state(new_state: MimicState) -> void:
 
 
 func start_attack() -> void:
-	velocity.x = 0.0
 	update_direction_to_player()
+
+	is_attack_lunging = false
+	attack_lunge_timer = 0.0
+	velocity.x = 0.0
+
 	play_animation("attack", true)
 
+func start_attack_lunge() -> void:
+	if current_state != MimicState.ATTACK:
+		return
 
+	if is_dead:
+		return
+
+	update_direction_to_player()
+
+	is_attack_lunging = true
+	attack_lunge_timer = attack_lunge_time
+	velocity.x = facing_direction * attack_lunge_speed
 func start_attack_hurt_box() -> void:
 	if current_state != MimicState.ATTACK:
 		return
 
+	start_attack_lunge()
+
 	is_attack_active = true
-	has_hit_player_this_attack = false
+	hit_players_this_attack.clear()
 
 	if attack_hurt_box_collision != null:
-		attack_hurt_box_collision.disabled = false
+		attack_hurt_box_collision.set_deferred("disabled", false)
 
 	if attack_hurt_box != null:
-		attack_hurt_box.monitoring = true
-		attack_hurt_box.monitorable = true
+		attack_hurt_box.set_deferred("monitoring", true)
+		attack_hurt_box.set_deferred("monitorable", true)
 
+	await get_tree().physics_frame
 	await get_tree().physics_frame
 
 	if attack_hurt_box == null:
+		return
+
+	if current_state != MimicState.ATTACK:
 		return
 
 	for body in attack_hurt_box.get_overlapping_bodies():
@@ -537,23 +573,20 @@ func start_attack_hurt_box() -> void:
 	for area in attack_hurt_box.get_overlapping_areas():
 		try_hit_player(area)
 
-
 func stop_attack_hurt_box() -> void:
 	is_attack_active = false
-	has_hit_player_this_attack = false
+	hit_players_this_attack.clear()
 
 	if attack_hurt_box != null:
-		attack_hurt_box.monitoring = false
+		attack_hurt_box.set_deferred("monitoring", false)
+		attack_hurt_box.set_deferred("monitorable", false)
 
 	if attack_hurt_box_collision != null:
-		attack_hurt_box_collision.disabled = true
+		attack_hurt_box_collision.set_deferred("disabled", true)
 
 
 func try_hit_player(target: Node) -> void:
 	if not is_attack_active:
-		return
-
-	if has_hit_player_this_attack:
 		return
 
 	var detected_player: Player = find_player_from_node(target)
@@ -561,18 +594,33 @@ func try_hit_player(target: Node) -> void:
 	if detected_player == null:
 		return
 
-	has_hit_player_this_attack = true
+	if !is_instance_valid(detected_player):
+		return
+
+	if detected_player.is_dead:
+		return
+
+	var id: int = detected_player.get_instance_id()
+
+	if hit_players_this_attack.has(id):
+		return
+
+	hit_players_this_attack[id] = true
+
+	print("Mimic đánh trúng Player: ", detected_player.name)
 
 	if detected_player.has_method("take_damage"):
 		detected_player.take_damage(damage, global_position)
 
 
 func start_hurt() -> void:
+	is_attack_lunging = false
+	attack_lunge_timer = 0.0
 	hurt_timer = hurt_time
 	stop_attack_hurt_box()
 
 	is_attack_active = false
-	has_hit_player_this_attack = false
+	hit_players_this_attack.clear()
 	attack_cooldown_timer = attack_cooldown_time
 
 	play_hurt_sound()
@@ -651,15 +699,18 @@ func start_die() -> void:
 	enable_interaction(false)
 
 	if hit_box != null:
-		hit_box.monitoring = false
-		hit_box.monitorable = false
+		hit_box.set_deferred("monitoring", false)
+		hit_box.set_deferred("monitorable", false)
+
+	if hit_box_collision != null:
+		hit_box_collision.set_deferred("disabled", true)
 
 	if vision_area != null:
-		vision_area.monitoring = false
-		vision_area.monitorable = false
+		vision_area.set_deferred("monitoring", false)
+		vision_area.set_deferred("monitorable", false)
 
 	if collision_shape != null:
-		collision_shape.disabled = true
+		collision_shape.set_deferred("disabled", true)
 
 	play_animation("die", true)
 
@@ -676,6 +727,9 @@ func give_exp_reward() -> void:
 
 func find_valid_player_in_vision() -> bool:
 	if vision_area == null:
+		return false
+
+	if !vision_area.monitoring:
 		return false
 
 	for body in vision_area.get_overlapping_bodies():

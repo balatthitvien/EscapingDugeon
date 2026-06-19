@@ -777,6 +777,7 @@ collision_layer = 4
 script = ExtResource("1_6ewya")
 max_health = 40
 damage = 4
+exp_reward = 15
 attack_min_x_distance = 70.0
 attack_max_x_distance = 100.0
 too_close_x_distance = 45.0

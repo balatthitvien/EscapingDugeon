@@ -15,11 +15,9 @@ enum BatState {
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 
-# HitBox = vùng Bat bị Player đánh
 @onready var hit_box: HitBox = $HitBox
 @onready var hit_box_collision: CollisionShape2D = $HitBox/CollisionShape2D
 
-# AttackHurtBox = vùng Bat tấn công Player
 @onready var attack_hurt_box: Area2D = $AttackHurtBox
 @onready var attack_hurt_box_collision: CollisionShape2D = $AttackHurtBox/CollisionShape2D
 
@@ -55,7 +53,6 @@ enum BatState {
 @export var die_volume_db: float = 5.0
 @export var flying_volume_db: float = -5.0
 
-# Dùng cho xác Bat rơi xuống đất
 @export var fall_gravity: float = 900.0
 @export var fall_max_speed: float = 420.0
 @export var return_up_max_time: float = 1.0
@@ -343,11 +340,21 @@ func update_dive_attack(_delta: float) -> void:
 func start_attack_hurt_box() -> void:
 	play_attack_sound()
 
-	attack_hurt_box_collision.disabled = false
-	attack_hurt_box.monitoring = true
-	attack_hurt_box.monitorable = true
+	if attack_hurt_box_collision != null:
+		attack_hurt_box_collision.set_deferred("disabled", false)
+
+	if attack_hurt_box != null:
+		attack_hurt_box.set_deferred("monitoring", true)
+		attack_hurt_box.set_deferred("monitorable", true)
 
 	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+	if attack_hurt_box == null:
+		return
+
+	if attack_hurt_box_collision != null and attack_hurt_box_collision.disabled:
+		return
 
 	for body in attack_hurt_box.get_overlapping_bodies():
 		attack_player(body)
@@ -357,8 +364,11 @@ func start_attack_hurt_box() -> void:
 
 
 func stop_attack_hurt_box() -> void:
-	attack_hurt_box.monitoring = false
-	attack_hurt_box_collision.disabled = true
+	if attack_hurt_box != null:
+		attack_hurt_box.set_deferred("monitoring", false)
+
+	if attack_hurt_box_collision != null:
+		attack_hurt_box_collision.set_deferred("disabled", true)
 
 
 func _on_attack_hurt_box_body_entered(body: Node2D) -> void:
@@ -413,18 +423,15 @@ func update_return_up(delta: float) -> void:
 	var direction_to_target: Vector2 = return_target_position - global_position
 	var distance_to_target: float = direction_to_target.length()
 
-	# Nếu đã về gần điểm hover thì kết thúc RETURN_UP
 	if distance_to_target <= return_finish_distance:
 		finish_return_up()
 		return
 
-	# Nếu bay quá lâu mà chưa tới được điểm hover thì bỏ bay lên
 	if return_up_timer >= return_up_max_time:
 		print("Bat RETURN_UP quá lâu, bỏ bay lên")
 		finish_return_up()
 		return
 
-	# Nếu bị kẹt gần như không di chuyển, cũng bỏ bay lên
 	var moved_distance: float = global_position.distance_to(last_return_up_position)
 
 	if moved_distance <= return_up_min_move_distance:
@@ -516,21 +523,25 @@ func start_fall() -> void:
 	play_die_sound()
 
 	if hit_box:
-		hit_box.monitoring = false
-		hit_box.monitorable = false
+		hit_box.set_deferred("monitoring", false)
+		hit_box.set_deferred("monitorable", false)
+
+	if hit_box_collision:
+		hit_box_collision.set_deferred("disabled", true)
 
 	if attack_hurt_box:
-		attack_hurt_box.monitoring = false
-		attack_hurt_box.monitorable = false
+		attack_hurt_box.set_deferred("monitoring", false)
+		attack_hurt_box.set_deferred("monitorable", false)
+
+	if attack_hurt_box_collision:
+		attack_hurt_box_collision.set_deferred("disabled", true)
 
 	if vision_area:
-		vision_area.monitoring = false
-		vision_area.monitorable = false
+		vision_area.set_deferred("monitoring", false)
+		vision_area.set_deferred("monitorable", false)
 
-	# Không tắt collision_shape ở đây.
-	# Cần giữ CollisionShape2D để Bat có thể chạm Ground khi rơi.
 	if collision_shape:
-		collision_shape.disabled = false
+		collision_shape.set_deferred("disabled", false)
 
 	velocity.x = 0.0
 	velocity.y = 0.0
@@ -548,7 +559,6 @@ func update_fall(delta: float) -> void:
 	if velocity.y > fall_max_speed:
 		velocity.y = fall_max_speed
 
-	# Nếu Bat đã chạm đất từ trước, chuyển luôn sang die.
 	if is_on_floor():
 		velocity = Vector2.ZERO
 		change_state(BatState.DIE)
@@ -558,9 +568,8 @@ func start_die() -> void:
 	current_state = BatState.DIE
 	velocity = Vector2.ZERO
 
-	# Lúc đã nằm xuống đất rồi mới tắt collision body.
 	if collision_shape:
-		collision_shape.disabled = true
+		collision_shape.set_deferred("disabled", true)
 
 	play_animation("die", true)
 
@@ -570,9 +579,6 @@ func _on_hit_box_damaged(damage_amount: int) -> void:
 	take_damage(damage_amount)
 
 
-# =========================
-# ANIMATION FINISHED
-# =========================
 
 func _on_animation_finished(anim_name: StringName) -> void:
 	if current_state == BatState.DIVE_ATTACK:
@@ -596,8 +602,6 @@ func _on_animation_finished(anim_name: StringName) -> void:
 		return
 
 	if current_state == BatState.FALL:
-		# Không chuyển DIE khi idle_to_fall kết thúc nữa.
-		# DIE chỉ được chạy khi Bat thật sự chạm đất trong update_fall().
 		return
 
 	if current_state == BatState.DIE:

@@ -4,9 +4,13 @@
 [ext_resource type="Texture2D" uid="uid://xqm0u0pkp3m8" path="res://NPC/NPC - Shop/Sprites/Potion-heal.png" id="2_nq8n3"]
 [ext_resource type="Texture2D" uid="uid://fucb6sfdd32v" path="res://Things/ArrowTrap/Arrow.png" id="3_c6sg6"]
 [ext_resource type="Texture2D" uid="uid://7qmbpvbsf5xq" path="res://NPC/NPC - Shop/Sprites/X letter.png" id="4_eb5lw"]
+[ext_resource type="AudioStream" uid="uid://bqpmbwndlrikf" path="res://NPC/NPC - Shop/Sprites/buy.mp3" id="5_eb5lw"]
 
 [node name="ShopUI" type="CanvasLayer" unique_id=771337602]
 script = ExtResource("1_rmrey")
 potion_texture = ExtResource("2_nq8n3")
 arrow_texture = ExtResource("3_c6sg6")
 coming_soon_texture = ExtResource("4_eb5lw")
+
+[node name="BuySuccessSound" type="AudioStreamPlayer" parent="." unique_id=2076643344]
+stream = ExtResource("5_eb5lw")

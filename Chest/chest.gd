@@ -16,6 +16,7 @@ extends Area2D
 @export var opened_animation_name: String = "opened"
 
 @export var is_supply_chest: bool = true
+@export var supply_mission_chest_id: String = "chest_map_2_001"
 @export var supply_flag_name: String = "has_found_supply_chest"
 @export var required_npc_id_for_supply: String = "npc_mission"
 @export var required_npc_talk_count: int = 2
@@ -135,10 +136,17 @@ func open_chest(opening_player: Player = null) -> void:
 
 	show_opened_visual()
 
-	if is_supply_chest:
+	if should_handle_supply_mission():
 		await handle_supply_chest_opened()
 
+func should_handle_supply_mission() -> bool:
+	if !is_supply_chest:
+		return false
 
+	if chest_id != supply_mission_chest_id:
+		return false
+
+	return true
 func _on_body_entered(body: Node2D) -> void:
 	var detected_player: Player = find_player_from_node(body)
 
@@ -338,6 +346,9 @@ func show_block_message(message: String) -> void:
 
 
 func handle_supply_chest_opened() -> void:
+	if !should_handle_supply_mission():
+		return
+
 	LevelManager.set_game_flag(supply_flag_name, true)
 
 	var talked_count: int = LevelManager.get_npc_talk_count(required_npc_id_for_supply)
@@ -346,7 +357,6 @@ func handle_supply_chest_opened() -> void:
 		await show_supply_chest_dialog_after_npc_known()
 	else:
 		await show_supply_chest_dialog_before_npc_known()
-
 
 func show_supply_chest_dialog_before_npc_known() -> void:
 	var dialog_lines: Array = [

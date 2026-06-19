@@ -24,7 +24,7 @@ const STATE_DIE: int = 5
 @onready var left_point: Node2D = $PatrolPoints/LeftPoint
 @onready var right_point: Node2D = $PatrolPoints/RightPoint
 @onready var enemy_health_bar: Node = get_node_or_null("EnemyHealthBar")
-
+@onready var hit_box_collision: CollisionShape2D = $HitBox/CollisionShape2D
 @export var max_hp: int = 5
 @export var move_speed: float = 35.0
 @export var chase_speed: float = 55.0
@@ -42,11 +42,8 @@ const STATE_DIE: int = 5
 
 @export var attack_cooldown: float = 1.0
 
-# Nếu true: thấy Player là đuổi.
-# Nếu false: chỉ nhìn thấy thì chưa đuổi, bị đánh mới phản ứng.
 @export var chase_when_seen: bool = true
 
-# Chống stun-lock / phản đòn khi bị chém sau lưng
 @export var combat_memory_time: float = 3.0
 @export var hurt_stun_cooldown: float = 0.45
 @export var anti_stun_after_hit_time: float = 0.9
@@ -73,7 +70,7 @@ var patrol_left_x: float = 0.0
 var patrol_right_x: float = 0.0
 
 var is_dead: bool = false
-var has_dealt_damage: bool = false
+var damaged_players_this_attack: Dictionary = {}
 var has_given_exp: bool = false
 
 func _ready() -> void:
@@ -93,7 +90,7 @@ func _ready() -> void:
 		patrol_left_x = patrol_right_x
 		patrol_right_x = temp_x
 
-	attack_collision.disabled = true
+	set_attack_hitbox_enabled(false)
 
 	vision_area.monitoring = true
 	vision_area.monitorable = true
@@ -198,12 +195,9 @@ func should_chase_player() -> bool:
 	if not has_valid_player():
 		return false
 
-	# Nếu Mushroom đang trong combat vì bị đánh,
-	# thì dù Player ở trước hay sau vẫn được phép đuổi / phản công.
 	if combat_memory_timer > 0.0:
 		return true
 
-	# Nếu chỉ nhìn thấy Player, chỉ chase khi Player ở trước mặt Mushroom.
 	if chase_when_seen and is_player_in_front():
 		return true
 
@@ -285,7 +279,22 @@ func process_chase(_delta: float) -> void:
 # =========================
 # CHANGE STATE
 # =========================
+func set_attack_hitbox_enabled(enabled: bool) -> void:
+	if attack_collision != null:
+		attack_collision.set_deferred("disabled", !enabled)
 
+	if attack_hurt_box != null:
+		attack_hurt_box.set_deferred("monitoring", enabled)
+		attack_hurt_box.set_deferred("monitorable", true)
+
+
+func disable_area_safely(area: Area2D, collision: CollisionShape2D = null) -> void:
+	if area != null:
+		area.set_deferred("monitoring", false)
+		area.set_deferred("monitorable", false)
+
+	if collision != null:
+		collision.set_deferred("disabled", true)
 func change_state(new_state: int, force: bool = false) -> void:
 	if is_dead and new_state != STATE_DIE:
 		return
@@ -299,17 +308,17 @@ func change_state(new_state: int, force: bool = false) -> void:
 	match state:
 		STATE_IDLE:
 			velocity.x = 0.0
-			attack_collision.disabled = true
+			set_attack_hitbox_enabled(false)
 			state_timer = randf_range(idle_time_min, idle_time_max)
 			play_idle_animation()
 
 		STATE_WALK:
-			attack_collision.disabled = true
+			set_attack_hitbox_enabled(false)
 			state_timer = randf_range(walk_time_min, walk_time_max)
 			play_walk_animation()
 
 		STATE_CHASE:
-			attack_collision.disabled = true
+			set_attack_hitbox_enabled(false)
 			play_walk_animation()
 
 		STATE_ATTACK:
@@ -341,8 +350,8 @@ func is_state_valid(check_state: int, check_token: int) -> bool:
 
 func start_attack(my_token: int) -> void:
 	velocity.x = 0.0
-	has_dealt_damage = false
-	attack_collision.disabled = true
+	set_attack_hitbox_enabled(false)
+	damaged_players_this_attack.clear()
 
 	remember_player_from_anywhere()
 	face_player_if_possible()
@@ -357,7 +366,7 @@ func start_attack(my_token: int) -> void:
 
 	await get_tree().create_timer(attack_anim_length).timeout
 
-	attack_collision.disabled = true
+	set_attack_hitbox_enabled(false)
 
 	if not is_state_valid(STATE_ATTACK, my_token):
 		return
@@ -378,15 +387,15 @@ func enable_attack_hitbox() -> void:
 	if state != STATE_ATTACK:
 		return
 
-	attack_collision.disabled = false
-	has_dealt_damage = false
+	set_attack_hitbox_enabled(true)
+	damaged_players_this_attack.clear()
 
 	await get_tree().physics_frame
 	check_attack_hit_now()
 
 
 func disable_attack_hitbox() -> void:
-	attack_collision.disabled = true
+	set_attack_hitbox_enabled(false)
 
 
 func check_attack_hit_now() -> void:
@@ -444,9 +453,6 @@ func try_damage_player(target: Node) -> void:
 	if state != STATE_ATTACK:
 		return
 
-	if has_dealt_damage:
-		return
-
 	if target == null:
 		return
 
@@ -455,7 +461,12 @@ func try_damage_player(target: Node) -> void:
 	if real_target == null:
 		return
 
-	has_dealt_damage = true
+	var id: int = real_target.get_instance_id()
+
+	if damaged_players_this_attack.has(id):
+		return
+
+	damaged_players_this_attack[id] = true
 
 	print("Mushroom đánh trúng Player: ", real_target.name)
 
@@ -464,7 +475,7 @@ func try_damage_player(target: Node) -> void:
 		return
 
 	if real_target.has_method("take_damage"):
-		real_target.take_damage(attack_damage)
+		real_target.take_damage(attack_damage, global_position)
 		return
 
 	if real_target.has_method("hurt"):
@@ -472,16 +483,14 @@ func try_damage_player(target: Node) -> void:
 		return
 
 	print("Player không có hàm die(), take_damage() hoặc hurt().")
-
-
 # =========================
 # HURT / DIE
 # =========================
 
 func start_hurt(my_token: int) -> void:
 	velocity.x = 0.0
-	attack_collision.disabled = true
-	has_dealt_damage = false
+	set_attack_hitbox_enabled(false)
+	damaged_players_this_attack.clear()
 
 	remember_player_from_anywhere()
 	face_player_if_possible()
@@ -528,22 +537,14 @@ func start_die(my_token: int) -> void:
 	state = STATE_DIE
 
 	velocity = Vector2.ZERO
-	attack_collision.disabled = true
+	set_attack_hitbox_enabled(false)
 
 	if body_collision != null:
-		body_collision.disabled = true
+		body_collision.set_deferred("disabled", true)
 
-	if hit_box != null:
-		hit_box.monitoring = false
-		hit_box.monitorable = false
-
-	if vision_area != null:
-		vision_area.monitoring = false
-		vision_area.monitorable = false
-
-	if attack_hurt_box != null:
-		attack_hurt_box.monitoring = false
-		attack_hurt_box.monitorable = false
+	disable_area_safely(hit_box, hit_box_collision)
+	disable_area_safely(vision_area)
+	disable_area_safely(attack_hurt_box, attack_collision)
 
 	play_die_animation()
 
@@ -637,8 +638,7 @@ func _on_hit_box_area_entered(area: Area2D) -> void:
 
 	remember_player_from_target(area)
 
-	# Nếu HitBox.gd đã phát signal Damaged thì không gây damage ở đây nữa,
-	# tránh bị trừ máu 2 lần.
+
 	if hit_box.has_signal("Damaged"):
 		return
 

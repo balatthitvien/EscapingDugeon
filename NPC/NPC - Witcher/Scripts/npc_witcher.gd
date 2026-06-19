@@ -33,7 +33,7 @@ var players_near: Dictionary = {}
 var is_running_behavior: bool = false
 var is_talking: bool = false
 var talk_count: int = 0
-
+var should_open_shop_after_dialog: bool = false
 
 func _ready() -> void:
 	randomize()
@@ -156,7 +156,7 @@ func start_dialog() -> void:
 
 	is_talking = true
 	current_state = WitcherState.DIALOG
-
+	should_open_shop_after_dialog = false
 	if talk_indicator != null:
 		talk_indicator.visible = false
 
@@ -176,7 +176,7 @@ func start_dialog() -> void:
 		story_dialog.story_finished.disconnect(_on_dialog_finished)
 
 	story_dialog.story_finished.connect(_on_dialog_finished, CONNECT_ONE_SHOT)
-
+	should_open_shop_after_dialog = talk_count > 0
 	if talk_count == 0:
 		story_dialog.start_story(get_first_dialog())
 	else:
@@ -189,8 +189,15 @@ func _on_dialog_finished() -> void:
 
 	is_talking = false
 
-	set_all_players_control_enabled(true)
+	if should_open_shop_after_dialog:
+		if is_two_player_mode():
+			show_two_player_disabled_message()
+			return
 
+		open_witcher_shop_ui()
+		return
+
+	set_all_players_control_enabled(true)
 	end_dialog()
 
 
@@ -475,3 +482,74 @@ func get_repeat_dialog() -> Array:
 			"text": "Bạn cần mua gì?"
 		}
 	]
+func open_witcher_shop_ui() -> void:
+	var shop_ui = get_tree().current_scene.get_node_or_null("WitcherShopUI")
+
+	if shop_ui == null:
+		shop_ui = get_tree().current_scene.find_child("WitcherShopUI", true, false)
+
+	if shop_ui == null:
+		push_warning("Không tìm thấy WitcherShopUI trong scene hiện tại.")
+		set_all_players_control_enabled(true)
+		end_dialog()
+		return
+
+	if shop_ui.has_signal("closed") and not shop_ui.closed.is_connected(_on_witcher_shop_ui_closed):
+		shop_ui.closed.connect(_on_witcher_shop_ui_closed)
+
+	if shop_ui.has_method("open_shop"):
+		shop_ui.open_shop(get_witcher_stats_player())
+	else:
+		push_warning("WitcherShopUI chưa có hàm open_shop().")
+		set_all_players_control_enabled(true)
+		end_dialog()
+
+
+func _on_witcher_shop_ui_closed() -> void:
+	set_all_players_control_enabled(true)
+	end_dialog()
+
+
+func get_witcher_stats_player() -> Player:
+	if PlayerManager.player != null and PlayerManager.player is Player:
+		return PlayerManager.player as Player
+
+	if player != null:
+		return player
+
+	var near_player := get_any_near_player()
+
+	if near_player != null:
+		return near_player
+
+	return null
+
+
+func show_two_player_disabled_message() -> void:
+	var story_dialog = get_tree().current_scene.get_node_or_null("StoryDialog")
+
+	if story_dialog == null:
+		set_all_players_control_enabled(true)
+		end_dialog()
+		return
+
+	is_talking = true
+
+	if story_dialog.story_finished.is_connected(_on_two_player_notice_finished):
+		story_dialog.story_finished.disconnect(_on_two_player_notice_finished)
+
+	story_dialog.story_finished.connect(_on_two_player_notice_finished, CONNECT_ONE_SHOT)
+
+	story_dialog.start_story([
+		{
+			"speaker": "npc",
+			"portrait": npc_portrait,
+			"text": "Chức năng này chỉ sử dụng ở chế độ 1 người chơi"
+		}
+	])
+
+
+func _on_two_player_notice_finished() -> void:
+	is_talking = false
+	set_all_players_control_enabled(true)
+	end_dialog()

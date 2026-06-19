@@ -2,7 +2,7 @@ class_name SlimeBoss
 extends CharacterBody2D
 
 signal enemy_died(death_position: Vector2)
-
+signal slime_boss_detected_player
 enum BossState {
 	IDLE,
 	CHASE,
@@ -32,13 +32,13 @@ const GRAVITY: float = 1000.0
 @export var max_health: int = 30
 @export var damage: int = 1
 @export var exp_reward: int = 10
-
+@export var chase_give_up_time: float = 8.0
+@export var chase_give_up_cooldown_time: float = 2.5
 @export var base_chase_speed: float = 70.0
 @export var retreat_speed: float = 90.0
 @export var max_retreat_time: float = 0.55
 @export var retreat_cooldown_time: float = 1.2
 @export var force_attack_when_cornered: bool = true
-# Boss đánh xa nên dùng khoảng cách theo mép collision, không dùng khoảng cách tâm.
 @export var attack_min_x_distance: float = 90.0
 @export var attack_max_x_distance: float = 190.0
 @export var too_close_x_distance: float = 75.0
@@ -52,15 +52,11 @@ const GRAVITY: float = 1000.0
 @export var knockback_force_x: float = 130.0
 @export var knockback_force_y: float = -90.0
 
-# Chống player spam chém làm boss mất chiêu liên tục.
 @export var normal_hurt_stun_cooldown_time: float = 1.2
 @export var attack_interrupt_cooldown_time: float = 0.7
 
-# Boss đang attack thì có thể bị ngắt vài lần,
-# sau đó sẽ có 1 lần kháng ngắt chiêu.
 @export var max_attack_interrupts_before_resist: int = 2
 
-# Tăng tốc theo mốc máu.
 @export var speed_multiplier_above_75: float = 1.0
 @export var speed_multiplier_below_75: float = 1.35
 @export var speed_multiplier_below_50: float = 1.55
@@ -86,7 +82,7 @@ var facing_direction: int = 1
 
 var is_dead: bool = false
 var is_attack_active: bool = false
-var has_hit_player_this_attack: bool = false
+var hit_players_this_attack: Dictionary = {}
 var has_given_exp: bool = false
 
 var attack_cooldown_timer: float = 0.0
@@ -100,7 +96,8 @@ var current_speed_multiplier: float = 1.0
 
 var vision_base_scale: Vector2 = Vector2.ONE
 var attack_base_scale: Vector2 = Vector2.ONE
-
+var chase_without_attack_timer: float = 0.0
+var chase_give_up_cooldown_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("enemy")
@@ -124,7 +121,6 @@ func _ready() -> void:
 
 func connect_signals() -> void:
 	if hit_box != null:
-		# Nếu HitBox.gd có signal Damaged thì ưu tiên dùng signal này để tránh nhận damage 2 lần.
 		if hit_box.has_signal("Damaged"):
 			var damaged_callable := Callable(self, "_on_hit_box_damaged")
 
@@ -206,7 +202,10 @@ func update_timers(delta: float) -> void:
 		retreat_cooldown_timer -= delta
 		if retreat_cooldown_timer < 0.0:
 			retreat_cooldown_timer = 0.0
-
+	if chase_give_up_cooldown_timer > 0.0:
+		chase_give_up_cooldown_timer -= delta
+		if chase_give_up_cooldown_timer < 0.0:
+			chase_give_up_cooldown_timer = 0.0
 
 func apply_gravity(delta: float) -> void:
 	if not is_on_floor():
@@ -218,15 +217,19 @@ func apply_gravity(delta: float) -> void:
 func process_idle(_delta: float) -> void:
 	velocity.x = 0.0
 
-	if find_valid_player_in_vision():
-		change_state(BossState.CHASE)
-		return
+	if chase_give_up_cooldown_timer <= 0.0:
+		if find_valid_player_in_vision():
+			change_state(BossState.CHASE)
+			return
 
 	play_animation("idle")
 
 
-func process_chase(_delta: float) -> void:
+func process_chase(delta: float) -> void:
 	if not has_valid_player():
+		player = null
+		velocity.x = 0.0
+
 		if not find_valid_player_in_vision():
 			change_state(BossState.IDLE)
 			return
@@ -234,7 +237,8 @@ func process_chase(_delta: float) -> void:
 	update_direction_to_player()
 
 	var x_distance: float = get_x_distance_to_player()
-
+	if update_chase_give_up_timer(delta, x_distance):
+		return
 	if x_distance < too_close_x_distance:
 		if retreat_cooldown_timer <= 0.0:
 			change_state(BossState.RETREAT)
@@ -315,12 +319,18 @@ func change_state(new_state: BossState) -> void:
 
 	if current_state == new_state:
 		return
+
+	var old_state: BossState = current_state
+
 	if current_state == BossState.ATTACK and new_state != BossState.ATTACK:
 		if animation_player != null:
 			animation_player.speed_scale = 1.0
 	stop_attack_hurt_box()
 
 	current_state = new_state
+
+	if old_state == BossState.IDLE and new_state == BossState.CHASE:
+		slime_boss_detected_player.emit()
 
 	match current_state:
 		BossState.IDLE:
@@ -345,10 +355,9 @@ func change_state(new_state: BossState) -> void:
 
 func start_attack() -> void:
 	print("SLIME BOSS START ATTACK")
-
+	chase_without_attack_timer = 0.0
 	velocity.x = 0.0
 
-	# Dù trước đó đang lùi hướng nào, khi đánh phải quay lại phía Player.
 	update_direction_to_player()
 
 	stop_attack_hurt_box()
@@ -371,19 +380,22 @@ func start_die() -> void:
 	stop_attack_hurt_box()
 
 	if body_collision != null:
-		body_collision.disabled = true
+		body_collision.set_deferred("disabled", true)
 
 	if hit_box != null:
-		hit_box.monitoring = false
-		hit_box.monitorable = false
+		hit_box.set_deferred("monitoring", false)
+		hit_box.set_deferred("monitorable", false)
 
 	if vision_area != null:
-		vision_area.monitoring = false
-		vision_area.monitorable = false
+		vision_area.set_deferred("monitoring", false)
+		vision_area.set_deferred("monitorable", false)
 
 	if attack_hurt_box != null:
-		attack_hurt_box.monitoring = false
-		attack_hurt_box.monitorable = false
+		attack_hurt_box.set_deferred("monitoring", false)
+		attack_hurt_box.set_deferred("monitorable", false)
+
+	if attack_hurt_box_collision != null:
+		attack_hurt_box_collision.set_deferred("disabled", true)
 	if boss_defeated_flag_name != "":
 		LevelManager.set_game_flag(boss_defeated_flag_name, true)
 
@@ -397,7 +409,6 @@ func start_die() -> void:
 
 # =========================
 # ATTACK HITBOX
-# Gọi các hàm này bằng Call Method Track trong AnimationPlayer.
 # =========================
 
 func start_attack_hurt_box() -> void:
@@ -410,15 +421,16 @@ func start_attack_hurt_box() -> void:
 	print("SLIME BOSS START ATTACK HIT CHECK")
 
 	is_attack_active = true
-	has_hit_player_this_attack = false
+	hit_players_this_attack.clear()
 
 	if attack_hurt_box_collision != null:
-		attack_hurt_box_collision.disabled = false
+		attack_hurt_box_collision.set_deferred("disabled", false)
 
 	if attack_hurt_box != null:
-		attack_hurt_box.monitoring = true
-		attack_hurt_box.monitorable = true
+		attack_hurt_box.set_deferred("monitoring", true)
+		attack_hurt_box.set_deferred("monitorable", true)
 
+	await get_tree().physics_frame
 	await get_tree().physics_frame
 
 	if current_state != BossState.ATTACK:
@@ -427,34 +439,33 @@ func start_attack_hurt_box() -> void:
 	if is_dead:
 		return
 
-	if attack_hurt_box != null:
-		for body in attack_hurt_box.get_overlapping_bodies():
-			try_hit_player(body)
+	if attack_hurt_box == null:
+		return
 
-		for area in attack_hurt_box.get_overlapping_areas():
-			try_hit_player(area)
+	for body in attack_hurt_box.get_overlapping_bodies():
+		try_hit_player(body)
 
-			if area.get_parent() != null:
-				try_hit_player(area.get_parent())
+	for area in attack_hurt_box.get_overlapping_areas():
+		try_hit_player(area)
+
+		if area.get_parent() != null:
+			try_hit_player(area.get_parent())
 
 	try_hit_player_by_attack_range()
 
 func stop_attack_hurt_box() -> void:
 	is_attack_active = false
-	has_hit_player_this_attack = false
+	hit_players_this_attack.clear()
 
 	if attack_hurt_box != null:
-		attack_hurt_box.monitoring = false
+		attack_hurt_box.set_deferred("monitoring", false)
+		attack_hurt_box.set_deferred("monitorable", false)
 
 	if attack_hurt_box_collision != null:
-		attack_hurt_box_collision.disabled = true
-
+		attack_hurt_box_collision.set_deferred("disabled", true)
 
 func try_hit_player(target: Node) -> void:
 	if not is_attack_active:
-		return
-
-	if has_hit_player_this_attack:
 		return
 
 	var detected_player: Player = find_player_from_node(target)
@@ -462,13 +473,25 @@ func try_hit_player(target: Node) -> void:
 	if detected_player == null:
 		return
 
-	has_hit_player_this_attack = true
+	if !is_instance_valid(detected_player):
+		return
+
+	if has_object_property(detected_player, "is_dead") and bool(detected_player.get("is_dead")):
+		return
+
+	var id: int = detected_player.get_instance_id()
+
+	if hit_players_this_attack.has(id):
+		return
+
+	hit_players_this_attack[id] = true
+
+	print("SLIME BOSS HIT PLAYER: ", detected_player.name)
 
 	if detected_player.has_method("take_damage"):
 		detected_player.take_damage(damage, global_position)
 	elif detected_player.has_method("die"):
 		detected_player.die(global_position)
-
 
 # =========================
 # DAMAGE / STUN
@@ -478,6 +501,8 @@ func take_damage(amount: int = 1, attacker_position: Vector2 = Vector2.ZERO) -> 
 	if is_dead:
 		return
 
+	chase_without_attack_timer = 0.0
+	chase_give_up_cooldown_timer = 0.0
 	current_health -= amount
 	current_health = clamp(current_health, 0, max_health)
 
@@ -578,8 +603,15 @@ func _on_hit_box_area_entered(area: Area2D) -> void:
 		damage_amount = int(possible_damage)
 
 	var attacker_position: Vector2 = Vector2.ZERO
+	var attacker_player := find_player_from_node(area)
 
-	if PlayerManager.player != null and PlayerManager.player is Node2D:
+	if attacker_player == null and area.get_parent() != null:
+		attacker_player = find_player_from_node(area.get_parent())
+
+	if attacker_player != null:
+		player = attacker_player
+		attacker_position = attacker_player.global_position
+	elif PlayerManager.player != null and PlayerManager.player is Node2D:
 		attacker_position = PlayerManager.player.global_position
 
 	take_damage(damage_amount, attacker_position)
@@ -588,12 +620,29 @@ func _on_hit_box_area_entered(area: Area2D) -> void:
 func _on_hit_box_damaged(arg1 = null, arg2 = null, arg3 = null) -> void:
 	var damage_amount: int = 1
 	var attacker_position: Vector2 = Vector2.ZERO
+	var attacker: Node = null
 
 	if typeof(arg1) == TYPE_INT or typeof(arg1) == TYPE_FLOAT:
 		damage_amount = int(arg1)
+	elif arg1 is Node:
+		attacker = arg1
 
 	if arg2 is Vector2:
 		attacker_position = arg2
+	elif arg2 is Node:
+		attacker = arg2
+
+	if arg3 is Node:
+		attacker = arg3
+
+	if attacker != null:
+		var attacker_player := find_player_from_node(attacker)
+
+		if attacker_player != null:
+			player = attacker_player
+			attacker_position = attacker_player.global_position
+		elif attacker is Node2D:
+			attacker_position = attacker.global_position
 
 	if attacker_position == Vector2.ZERO and PlayerManager.player != null:
 		attacker_position = PlayerManager.player.global_position
@@ -604,7 +653,7 @@ func _on_hit_box_damaged(arg1 = null, arg2 = null, arg3 = null) -> void:
 func _on_vision_area_body_entered(body: Node2D) -> void:
 	var detected_player: Player = find_player_from_node(body)
 
-	if detected_player == null:
+	if !is_alive_player(detected_player):
 		return
 
 	player = detected_player
@@ -619,7 +668,7 @@ func _on_vision_area_area_entered(area: Area2D) -> void:
 	if detected_player == null and area.get_parent() != null:
 		detected_player = find_player_from_node(area.get_parent())
 
-	if detected_player == null:
+	if !is_alive_player(detected_player):
 		return
 
 	player = detected_player
@@ -666,47 +715,131 @@ func _on_animation_finished(anim_name: StringName) -> void:
 func find_valid_player_in_vision() -> bool:
 	if vision_area == null:
 		return false
+	if chase_give_up_cooldown_timer > 0.0:
+		return false
+	if !vision_area.monitoring:
+		return false
 
 	for body in vision_area.get_overlapping_bodies():
 		var detected_player: Player = find_player_from_node(body)
 
-		if detected_player != null:
-			player = detected_player
-			return true
+		if !is_alive_player(detected_player):
+			continue
+
+		player = detected_player
+		return true
 
 	for area in vision_area.get_overlapping_areas():
 		var detected_player: Player = find_player_from_node(area)
 
-		if detected_player != null:
-			player = detected_player
-			return true
+		if detected_player == null and area.get_parent() != null:
+			detected_player = find_player_from_node(area.get_parent())
+
+		if !is_alive_player(detected_player):
+			continue
+
+		player = detected_player
+		return true
 
 	return false
 
 
 func has_valid_player() -> bool:
-	if player == null:
+	return is_alive_player(player)
+
+func has_object_property(obj: Object, prop_name: String) -> bool:
+	if obj == null:
 		return false
 
-	if not is_instance_valid(player):
-		return false
+	for prop in obj.get_property_list():
+		if String(prop.get("name", "")) == prop_name:
+			return true
 
-	if player.has_method("is_dead"):
-		return not player.is_dead
-
-	return true
-
-
+	return false
 func remember_player_from_attack(attacker_position: Vector2 = Vector2.ZERO) -> void:
-	if PlayerManager.player != null and PlayerManager.player is Player:
-		player = PlayerManager.player as Player
+	if attacker_position != Vector2.ZERO:
+		var nearest_player := find_nearest_player_to_position(attacker_position)
+
+		if nearest_player != null:
+			player = nearest_player
 
 	if attacker_position != Vector2.ZERO:
 		face_position(attacker_position)
 	elif has_valid_player():
 		update_direction_to_player()
 
+func find_nearest_player_to_position(target_position: Vector2) -> Player:
+	var nearest_player: Player = null
+	var nearest_distance: float = 999999.0
 
+	for p in get_all_players():
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		if has_object_property(p, "is_dead") and bool(p.get("is_dead")):
+			continue
+
+		var distance: float = p.global_position.distance_to(target_position)
+
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest_player = p
+
+	return nearest_player
+
+
+func get_all_players() -> Array[Player]:
+	var result: Array[Player] = []
+	var added_ids: Dictionary = {}
+
+	var groups_to_check: Array[String] = [
+		"players",
+		"player",
+		"Player"
+	]
+
+	for group_name in groups_to_check:
+		for node in get_tree().get_nodes_in_group(group_name):
+			var detected_player := find_player_from_node(node)
+
+			if detected_player == null:
+				continue
+
+			if !is_instance_valid(detected_player):
+				continue
+
+			var id: int = detected_player.get_instance_id()
+
+			if added_ids.has(id):
+				continue
+
+			added_ids[id] = true
+			result.append(detected_player)
+
+	var player_1_node := get_tree().root.find_child("Player", true, false)
+	var player_2_node := get_tree().root.find_child("Player2", true, false)
+
+	for node in [player_1_node, player_2_node]:
+		var detected_player := find_player_from_node(node)
+
+		if detected_player == null:
+			continue
+
+		if !is_instance_valid(detected_player):
+			continue
+
+		var id: int = detected_player.get_instance_id()
+
+		if added_ids.has(id):
+			continue
+
+		added_ids[id] = true
+		result.append(detected_player)
+
+	return result
 func update_direction_to_player() -> void:
 	if not has_valid_player():
 		return
@@ -755,7 +888,6 @@ func move_away_from_player_with_back_turned() -> void:
 		velocity.x = 0.0
 		return
 
-	# Player ở bên phải boss thì boss lùi sang trái và quay mặt trái.
 	if player.global_position.x > global_position.x:
 		set_facing_direction(-1)
 		velocity.x = -retreat_speed
@@ -771,6 +903,9 @@ func find_player_from_node(node: Node) -> Player:
 		if current is Player:
 			return current as Player
 
+		if current.is_in_group("players"):
+			return current as Player
+
 		if current.is_in_group("player"):
 			return current as Player
 
@@ -780,7 +915,31 @@ func find_player_from_node(node: Node) -> Player:
 		if current.name == "Player":
 			return current as Player
 
+		if current.name == "Player2":
+			return current as Player
+
 		current = current.get_parent()
+
+	if node != null and node.owner != null:
+		var owner_node: Node = node.owner
+
+		if owner_node is Player:
+			return owner_node as Player
+
+		if owner_node.is_in_group("players"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("player"):
+			return owner_node as Player
+
+		if owner_node.is_in_group("Player"):
+			return owner_node as Player
+
+		if owner_node.name == "Player":
+			return owner_node as Player
+
+		if owner_node.name == "Player2":
+			return owner_node as Player
 
 	return null
 
@@ -795,10 +954,10 @@ func is_targeting_player() -> bool:
 	if not is_instance_valid(player):
 		return false
 
-	if PlayerManager.player == null:
-		return false
+	if player is Player:
+		return true
 
-	return player == PlayerManager.player
+	return false
 
 
 # =========================
@@ -946,40 +1105,73 @@ func try_hit_player_by_attack_range() -> void:
 	if not is_attack_active:
 		return
 
-	if has_hit_player_this_attack:
-		return
+	for target_player in get_all_players():
+		if target_player == null:
+			continue
 
-	if not has_valid_player():
-		return
+		if !is_instance_valid(target_player):
+			continue
 
-	var signed_x_distance: float = player.global_position.x - global_position.x
+		if has_object_property(target_player, "is_dead") and bool(target_player.get("is_dead")):
+			continue
+
+		if !is_specific_player_in_attack_range(target_player):
+			continue
+
+		var id: int = target_player.get_instance_id()
+
+		if hit_players_this_attack.has(id):
+			continue
+
+		hit_players_this_attack[id] = true
+
+		print("SLIME BOSS RANGE HIT PLAYER: ", target_player.name)
+
+		if target_player.has_method("take_damage"):
+			target_player.take_damage(damage, global_position)
+		elif target_player.has_method("die"):
+			target_player.die(global_position)
+func find_player_in_attack_range() -> Player:
+	for p in get_all_players():
+		if p == null:
+			continue
+
+		if !is_instance_valid(p):
+			continue
+
+		if has_object_property(p, "is_dead") and bool(p.get("is_dead")):
+			continue
+
+		if is_specific_player_in_attack_range(p):
+			return p
+
+	return null
+
+
+func is_specific_player_in_attack_range(target_player: Player) -> bool:
+	if target_player == null:
+		return false
+
+	var signed_x_distance: float = target_player.global_position.x - global_position.x
 	var x_distance: float = absf(signed_x_distance)
-	var y_distance: float = absf(player.global_position.y - global_position.y)
+	var y_distance: float = absf(target_player.global_position.y - global_position.y)
 
-	# Player phải ở phía trước mặt boss.
 	if facing_direction > 0 and signed_x_distance < 0.0:
-		return
+		return false
 
 	if facing_direction < 0 and signed_x_distance > 0.0:
-		return
+		return false
 
 	if x_distance < attack_hit_min_x_distance:
-		return
+		return false
 
 	if x_distance > attack_hit_max_x_distance:
-		return
+		return false
 
 	if y_distance > attack_hit_y_tolerance:
-		return
+		return false
 
-	has_hit_player_this_attack = true
-
-	print("SLIME BOSS RANGE HIT PLAYER")
-
-	if player.has_method("take_damage"):
-		player.take_damage(damage, global_position)
-	elif player.has_method("die"):
-		player.die(global_position)
+	return true
 func start_retreat() -> void:
 	retreat_timer = max_retreat_time
 	move_away_from_player_with_back_turned()
@@ -1040,3 +1232,44 @@ func play_die_sounds() -> void:
 		die_sound_2.stop()
 		die_sound_2.volume_db = die_2_volume_db
 		die_sound_2.play()
+func is_alive_player(target_player: Player) -> bool:
+	if target_player == null:
+		return false
+
+	if !is_instance_valid(target_player):
+		return false
+
+	if has_object_property(target_player, "is_dead"):
+		if bool(target_player.get("is_dead")):
+			return false
+
+	return true
+func update_chase_give_up_timer(delta: float, x_distance: float) -> bool:
+	if chase_give_up_time <= 0.0:
+		return false
+
+	if x_distance > attack_max_x_distance:
+		chase_without_attack_timer += delta
+	else:
+		chase_without_attack_timer = 0.0
+
+	if chase_without_attack_timer >= chase_give_up_time:
+		give_up_chase()
+		return true
+
+	return false
+
+
+func give_up_chase() -> void:
+	print("SLIME BOSS GIVE UP CHASE")
+
+	chase_without_attack_timer = 0.0
+	chase_give_up_cooldown_timer = chase_give_up_cooldown_time
+
+	player = null
+	velocity.x = 0.0
+
+	stop_attack_hurt_box()
+
+	if current_state != BossState.DIE:
+		change_state(BossState.IDLE)

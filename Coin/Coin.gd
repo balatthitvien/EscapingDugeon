@@ -97,48 +97,44 @@ func play_idle_animation() -> void:
 
 
 func _on_collect_area_body_entered(body: Node2D) -> void:
-	if is_collected:
-		return
-
-	var player: Node = find_player_from_node(body)
-
-	if player == null:
-		return
-
-	collect_coin(player)
+	request_collect_from_node(body)
 
 
 func _on_collect_area_area_entered(area: Area2D) -> void:
+	request_collect_from_node(area)
+
+
+func request_collect_from_node(node: Node) -> void:
 	if is_collected:
 		return
 
-	var player: Node = find_player_from_node(area)
+	var player: Node = find_player_from_node(node)
 
 	if player == null:
 		return
 
-	collect_coin(player)
+	is_collected = true
+	call_deferred("collect_coin", player)
 
 
 func collect_coin(player: Node) -> void:
-	is_collected = true
-
 	if collision_shape != null:
-		collision_shape.disabled = true
+		collision_shape.set_deferred("disabled", true)
 
 	if collect_area != null:
-		collect_area.monitoring = false
-		collect_area.monitorable = false
+		collect_area.set_deferred("monitoring", false)
+		collect_area.set_deferred("monitorable", false)
 
 	if collect_area_collision != null:
-		collect_area_collision.disabled = true
+		collect_area_collision.set_deferred("disabled", true)
 
-	if player.has_method("add_coin"):
-		player.add_coin(coin_value)
-	elif player.has_method("add_coins"):
-		player.add_coins(coin_value)
-	else:
-		print("Player chưa có hàm add_coin() hoặc add_coins(). Coin vẫn được nhặt.")
+	if player != null and is_instance_valid(player):
+		if player.has_method("add_coin"):
+			player.add_coin(coin_value)
+		elif player.has_method("add_coins"):
+			player.add_coins(coin_value)
+		else:
+			print("Player chưa có hàm add_coin() hoặc add_coins(). Coin vẫn được nhặt.")
 
 	if collect_sound != null:
 		collect_sound.play()
@@ -147,7 +143,8 @@ func collect_coin(player: Node) -> void:
 		animation_player.play(collected_animation_name)
 		await animation_player.animation_finished
 	else:
-		sprite_2d.visible = false
+		if sprite_2d != null:
+			sprite_2d.visible = false
 
 	if collect_sound != null and collect_sound.stream != null:
 		await collect_sound.finished

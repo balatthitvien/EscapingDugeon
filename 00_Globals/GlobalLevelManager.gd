@@ -1,5 +1,8 @@
 extends Node
 signal tilemap_bounds_changed(bounds: Array[Vector2])
+signal arrow_changed(has_bow: bool, arrow_count: int)
+const WITCHER_ITEM_BASE_PRICE: int = 30
+const WITCHER_ITEM_PRICE_MULTIPLIER: float = 1.3
 var current_tilemap_bounds: Array[Vector2] = []
 
 var has_shown_map_1_interact_hint: bool = false
@@ -10,7 +13,9 @@ var npc_talk_counts: Dictionary = {}
 var npc_interact_flags: Dictionary = {}
 var game_flags: Dictionary = {}
 var has_played_map_1_eye_open: bool = false
-
+var witcher_strength_buy_count: int = 0
+var witcher_defense_buy_count: int = 0
+var witcher_speed_buy_count: int = 0
 var weapon_upgrade_level: int = 0
 var weapon_base_upgrade_cost: int = 30
 var weapon_upgrade_cost_multiplier: float = 1.5
@@ -18,7 +23,9 @@ var saved_campfire_id: String = ""
 var saved_respawn_scene_path: String = ""
 var saved_respawn_spawn_point_name: String = ""
 var map_transition_locked_until_msec: int = 0
-
+var has_bow: bool = false
+var arrow_count: int = 0
+var has_shown_bow_hint: bool = false
 func change_tilemap_bounds(bounds: Array[Vector2]) -> void:
 	current_tilemap_bounds = bounds
 	tilemap_bounds_changed.emit(bounds)
@@ -199,3 +206,85 @@ func set_bounds_from_tilemap_layer(tilemap: TileMapLayer) -> void:
 	change_tilemap_bounds([top_left, bottom_right])
 
 	print("MAP BOUNDS SET: ", top_left, " -> ", bottom_right)
+func unlock_bow(start_arrow_count: int = 10) -> void:
+	has_bow = true
+	arrow_count += max(start_arrow_count, 0)
+
+	arrow_changed.emit(has_bow, arrow_count)
+
+
+func add_arrows(amount: int) -> void:
+	if amount <= 0:
+		return
+
+	has_bow = true
+	arrow_count += amount
+
+	arrow_changed.emit(has_bow, arrow_count)
+
+
+func can_shoot_arrow() -> bool:
+	if !has_bow:
+		return false
+
+	return arrow_count > 0
+
+
+func consume_arrow() -> bool:
+	if !can_shoot_arrow():
+		return false
+
+	arrow_count -= 1
+	arrow_count = max(arrow_count, 0)
+
+	arrow_changed.emit(has_bow, arrow_count)
+
+	return true
+
+
+func consume_bow_hint_once() -> bool:
+	if has_shown_bow_hint:
+		return false
+
+	has_shown_bow_hint = true
+	return true
+func reset_bow_data() -> void:
+	has_bow = false
+	arrow_count = 0
+	has_shown_bow_hint = false
+
+	arrow_changed.emit(has_bow, arrow_count)
+func refresh_arrow_data() -> void:
+	arrow_count = max(arrow_count, 0)
+	arrow_changed.emit(has_bow, arrow_count)
+func get_witcher_item_price(item_id: String) -> int:
+	var buy_count := get_witcher_item_buy_count(item_id)
+	return int(round(float(WITCHER_ITEM_BASE_PRICE) * pow(WITCHER_ITEM_PRICE_MULTIPLIER, float(buy_count))))
+
+
+func get_witcher_item_buy_count(item_id: String) -> int:
+	match item_id:
+		"strength":
+			return witcher_strength_buy_count
+		"defense":
+			return witcher_defense_buy_count
+		"speed":
+			return witcher_speed_buy_count
+
+	return 0
+
+
+func increase_witcher_item_buy_count(item_id: String) -> void:
+	match item_id:
+		"strength":
+			witcher_strength_buy_count += 1
+		"defense":
+			witcher_defense_buy_count += 1
+		"speed":
+			witcher_speed_buy_count += 1
+
+
+func reset_witcher_shop_data() -> void:
+	witcher_strength_buy_count = 0
+	witcher_defense_buy_count = 0
+	witcher_speed_buy_count = 0
