@@ -917,7 +917,7 @@ position = Vector2(132, -85)
 script = ExtResource("18_tmfqt")
 enemy_scene = ExtResource("10_ynn7o")
 coin_scene = ExtResource("13_nyw6h")
-coin_drop_count = 500
+coin_drop_count = 200
 
 [node name="RatSpawner2" type="Node2D" parent="Spawner" unique_id=727637502]
 position = Vector2(1187, -246)
@@ -973,7 +973,7 @@ position = Vector2(3055, -375)
 [node name="CampFire" parent="." unique_id=937363598 instance=ExtResource("24_be8vy")]
 position = Vector2(2936, -126)
 campfire_id = "campfire_map_2"
-camp_scene_path = "uid://clxcs5278p4wt"
+camp_scene_path = "uid://mmy0de35ni0j"
 
 [node name="StoryDialog" type="CanvasLayer" parent="." unique_id=1815056245]
 script = ExtResource("25_gnhie")

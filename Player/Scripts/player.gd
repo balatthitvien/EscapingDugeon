@@ -686,7 +686,7 @@ func apply_weapon_upgrade_bonus() -> void:
 
 
 func get_attack_damage() -> int:
-	var damage: int = max(1, 10 + weapon_bonus_attack)
+	var damage: int = max(1, 1 + weapon_bonus_attack)
 
 	if witcher_strength_time_left > 0.0:
 		damage = int(ceil(float(damage) * WITCHER_STRENGTH_DAMAGE_MULTIPLIER))
