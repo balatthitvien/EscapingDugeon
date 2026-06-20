@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="EscapingDugeon (Copy)"
-run/main_scene="uid://cbbyil75re85b"
+run/main_scene="uid://mmy0de35ni0j"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="uid://s5cv5582wj4w"
 

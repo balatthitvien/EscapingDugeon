@@ -36,6 +36,7 @@ extends CanvasLayer
 @export var item_slot_frame_position: Vector2 = Vector2(8, 205)
 @export var item_slot_frame_size: Vector2 = Vector2(30, 30)
 @export var item_name_label_position: Vector2 = Vector2(44, 220)
+@export var potion_hint_label_position: Vector2 = Vector2(120, 60)
 var hearts: Array[Node] = []
 var last_health: int = 0
 var max_health: int = 0
@@ -60,6 +61,8 @@ func _ready() -> void:
 		potion_icon.position = potion_icon_position
 	if potion_count_label != null:
 		potion_count_label.position = potion_label_position
+	if potion_hint_label != null:
+		potion_hint_label.position = potion_hint_label_position
 	if potion_icon != null:
 		health_potion_texture = potion_icon.texture
 
